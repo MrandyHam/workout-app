@@ -1,0 +1,1409 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#0f1115" />
+  <title>增肌打卡 · Haolin</title>
+  <style>
+:root {
+  --bg: #0f1115;
+  --bg2: #171a21;
+  --bg3: #1e232c;
+  --card: #222833;
+  --border: #2e3644;
+  --text: #e8ecf2;
+  --muted: #8b95a8;
+  --accent: #ff4d4f;
+  --accent-dim: rgba(255, 77, 79, 0.18);
+  --green: #3dd68c;
+  --green-dim: rgba(61, 214, 140, 0.15);
+  --blue: #5b8cff;
+  --radius: 14px;
+  --shadow: 0 8px 28px rgba(0, 0, 0, 0.35);
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Noto Sans SC",
+    "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100%;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  line-height: 1.5;
+  padding: 0 0 env(safe-area-inset-bottom);
+}
+
+.app {
+  max-width: 520px;
+  margin: 0 auto;
+  padding: 20px 16px 48px;
+}
+
+.header { margin-bottom: 20px; }
+.header-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.header h1 {
+  font-size: 1.55rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+.badge {
+  font-size: 0.72rem;
+  color: var(--muted);
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  padding: 4px 10px;
+  border-radius: 999px;
+}
+.subtitle {
+  margin-top: 6px;
+  color: var(--muted);
+  font-size: 0.88rem;
+}
+
+.day-picker { margin-bottom: 22px; }
+.suggest {
+  font-size: 0.85rem;
+  color: var(--blue);
+  margin-bottom: 12px;
+  min-height: 1.3em;
+}
+.day-btns {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+.day-btn {
+  background: var(--card);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text);
+  padding: 14px 8px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  transition: border-color 0.15s, background 0.15s, transform 0.1s;
+}
+.day-btn:active { transform: scale(0.97); }
+.day-btn.active {
+  border-color: var(--accent);
+  background: var(--accent-dim);
+  box-shadow: 0 0 0 1px var(--accent);
+}
+.day-emoji { font-size: 1.4rem; }
+.day-name { font-size: 1.15rem; font-weight: 700; }
+.day-desc { font-size: 0.72rem; color: var(--muted); }
+
+.session-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+.session-bar h2 { font-size: 1.2rem; }
+.link-btn {
+  background: none;
+  border: none;
+  color: var(--blue);
+  font-size: 0.9rem;
+  cursor: pointer;
+  padding: 6px 4px;
+}
+
+.progress-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.progress-bar {
+  flex: 1;
+  height: 8px;
+  background: var(--bg3);
+  border-radius: 999px;
+  overflow: hidden;
+}
+.progress-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, var(--accent), #ff7a45);
+  border-radius: 999px;
+  transition: width 0.25s ease;
+}
+.progress-text {
+  font-size: 0.78rem;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.note-row {
+  margin-bottom: 16px;
+}
+.note-row label {
+  display: block;
+  font-size: 0.78rem;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+.note-row input {
+  width: 100%;
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--text);
+  padding: 10px 12px;
+  font-size: 0.95rem;
+  outline: none;
+}
+.note-row input:focus { border-color: var(--blue); }
+
+.exercise-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.ex-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px;
+  box-shadow: var(--shadow);
+}
+.ex-card.done {
+  border-color: rgba(61, 214, 140, 0.45);
+  background: linear-gradient(180deg, var(--green-dim), var(--card));
+}
+.ex-head {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+.ex-thumb {
+  width: 56px;
+  height: 56px;
+  flex-shrink: 0;
+  background: var(--bg2);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
+.ex-thumb svg { width: 48px; height: 48px; }
+.ex-meta { flex: 1; min-width: 0; }
+.ex-name {
+  font-size: 1.02rem;
+  font-weight: 650;
+  margin-bottom: 2px;
+}
+.ex-reps {
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+.ex-muscles {
+  font-size: 0.72rem;
+  color: var(--accent);
+  margin-top: 4px;
+}
+.btn-detail {
+  flex-shrink: 0;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: 10px;
+  padding: 8px 10px;
+  font-size: 0.78rem;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.btn-detail:active { opacity: 0.85; }
+
+.sets-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+  flex-wrap: wrap;
+}
+.set-chip {
+  flex: 1;
+  min-width: 88px;
+  background: var(--bg2);
+  border: 1.5px solid var(--border);
+  border-radius: 12px;
+  padding: 10px 8px;
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.15s;
+  color: var(--muted);
+  font-size: 0.82rem;
+  user-select: none;
+}
+.set-chip strong {
+  display: block;
+  font-size: 0.95rem;
+  color: var(--text);
+  margin-bottom: 2px;
+}
+.set-chip.checked {
+  border-color: var(--green);
+  background: var(--green-dim);
+  color: var(--green);
+}
+.set-chip.checked strong { color: var(--green); }
+
+.set-inputs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 10px;
+}
+.set-inputs .field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.set-inputs label {
+  font-size: 0.7rem;
+  color: var(--muted);
+}
+.set-inputs input {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text);
+  padding: 8px 10px;
+  font-size: 0.9rem;
+  width: 100%;
+  outline: none;
+}
+.set-inputs input:focus { border-color: var(--blue); }
+
+.session-actions {
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.btn-primary {
+  width: 100%;
+  background: linear-gradient(135deg, #ff4d4f, #ff7a45);
+  border: none;
+  color: #fff;
+  font-weight: 700;
+  font-size: 1rem;
+  padding: 14px;
+  border-radius: 12px;
+  cursor: pointer;
+  box-shadow: 0 6px 20px rgba(255, 77, 79, 0.3);
+}
+.btn-primary:active { opacity: 0.9; }
+.btn-ghost {
+  width: 100%;
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--muted);
+  padding: 12px;
+  border-radius: 12px;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.history-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.history-item {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+}
+.history-item .hi-top {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+.history-item .hi-day {
+  font-weight: 650;
+}
+.history-item .hi-date {
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+.history-item .hi-stats {
+  font-size: 0.82rem;
+  color: var(--muted);
+}
+.history-item .hi-note {
+  margin-top: 6px;
+  font-size: 0.82rem;
+  color: var(--text);
+}
+.empty-hint {
+  color: var(--muted);
+  font-size: 0.9rem;
+  text-align: center;
+  padding: 28px 12px;
+}
+
+.footer {
+  margin-top: 28px;
+  text-align: center;
+  color: var(--muted);
+  font-size: 0.75rem;
+}
+
+/* Modal */
+.modal {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+.modal[hidden] { display: none; }
+.modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
+}
+.modal-sheet {
+  position: relative;
+  width: 100%;
+  max-width: 520px;
+  max-height: 92vh;
+  overflow-y: auto;
+  background: var(--bg2);
+  border-radius: 20px 20px 0 0;
+  padding: 20px 16px 32px;
+  border: 1px solid var(--border);
+  border-bottom: none;
+  animation: slideUp 0.22s ease;
+}
+@keyframes slideUp {
+  from { transform: translateY(40px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+.modal-close {
+  position: absolute;
+  top: 12px;
+  right: 14px;
+  width: 36px;
+  height: 36px;
+  border: none;
+  background: var(--bg3);
+  color: var(--text);
+  border-radius: 50%;
+  font-size: 1.4rem;
+  line-height: 1;
+  cursor: pointer;
+}
+.modal-sheet h3 {
+  font-size: 1.2rem;
+  padding-right: 40px;
+  margin-bottom: 6px;
+}
+.modal-tips {
+  font-size: 0.88rem;
+  color: var(--muted);
+  margin-bottom: 16px;
+}
+.modal-visuals {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+.visual-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 10px;
+  text-align: center;
+}
+.visual-label {
+  font-size: 0.72rem;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+.red-dot { color: var(--accent); }
+.icon-box, .muscle-box {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 140px;
+}
+.icon-box svg, .muscle-box svg {
+  width: 100%;
+  max-width: 140px;
+  height: auto;
+}
+
+.sets-log h4 {
+  font-size: 0.9rem;
+  margin-bottom: 10px;
+}
+.log-set {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px;
+  margin-bottom: 8px;
+}
+.log-set-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+.log-set-top label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+.log-set-top input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--green);
+}
+.log-fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.log-fields input {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text);
+  padding: 8px 10px;
+  font-size: 0.88rem;
+  width: 100%;
+  outline: none;
+}
+.log-fields input:focus { border-color: var(--blue); }
+.log-fields label {
+  font-size: 0.68rem;
+  color: var(--muted);
+  display: block;
+  margin-bottom: 3px;
+}
+
+@media (min-width: 600px) {
+  .modal {
+    align-items: center;
+  }
+  .modal-sheet {
+    border-radius: 20px;
+    border-bottom: 1px solid var(--border);
+    max-height: 85vh;
+  }
+}
+
+@media (max-width: 360px) {
+  .modal-visuals { grid-template-columns: 1fr; }
+  .set-chip { min-width: 70px; }
+}
+
+</style>
+</head>
+<body>
+  <div class="app">
+    <header class="header">
+      <div class="header-top">
+        <h1>增肌打卡</h1>
+        <span class="badge">187cm · 75kg · 新手</span>
+      </div>
+      <p class="subtitle">一周三练 · 推 / 拉 / 腿 · 数据仅存本机</p>
+    </header>
+
+    <section class="day-picker" aria-label="选择训练日">
+      <p class="suggest" id="suggestText"></p>
+      <div class="day-btns">
+        <button type="button" class="day-btn" data-day="push" id="btn-push">
+          <span class="day-emoji">💥</span>
+          <span class="day-name">推</span>
+          <span class="day-desc">胸肩三头</span>
+        </button>
+        <button type="button" class="day-btn" data-day="pull" id="btn-pull">
+          <span class="day-emoji">🧲</span>
+          <span class="day-name">拉</span>
+          <span class="day-desc">背二头</span>
+        </button>
+        <button type="button" class="day-btn" data-day="legs" id="btn-legs">
+          <span class="day-emoji">🦵</span>
+          <span class="day-name">腿</span>
+          <span class="day-desc">臀腿核心</span>
+        </button>
+      </div>
+    </section>
+
+    <section class="session" id="sessionPanel" hidden>
+      <div class="session-bar">
+        <h2 id="sessionTitle"></h2>
+        <button type="button" class="link-btn" id="btnHistory">历史</button>
+      </div>
+      <div class="progress-wrap">
+        <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+        <span class="progress-text" id="progressText">0 / 0 组</span>
+      </div>
+      <div class="note-row">
+        <label for="sessionNote">今日备注</label>
+        <input type="text" id="sessionNote" placeholder="例如：状态不错 / 卧推加片…" maxlength="80" />
+      </div>
+      <div id="exerciseList" class="exercise-list"></div>
+      <div class="session-actions">
+        <button type="button" class="btn-primary" id="btnComplete">完成本次训练</button>
+        <button type="button" class="btn-ghost" id="btnResetDay">清空今日勾选</button>
+      </div>
+    </section>
+
+    <section class="history-panel" id="historyPanel" hidden>
+      <div class="session-bar">
+        <h2>训练历史</h2>
+        <button type="button" class="link-btn" id="btnBackSession">返回</button>
+      </div>
+      <ul id="historyList" class="history-list"></ul>
+      <p class="empty-hint" id="historyEmpty" hidden>还没有记录，完成一次训练后会出现在这里。</p>
+    </section>
+
+    <footer class="footer">
+      <p>组间休息 90–120 秒 · 能轻松做满上限次数就下周加一点重量</p>
+    </footer>
+  </div>
+
+  <!-- 动作详情弹层 -->
+  <div class="modal" id="detailModal" hidden>
+    <div class="modal-backdrop" data-close></div>
+    <div class="modal-sheet" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <button type="button" class="modal-close" data-close aria-label="关闭">×</button>
+      <h3 id="modalTitle"></h3>
+      <p class="modal-tips" id="modalTips"></p>
+      <div class="modal-visuals">
+        <div class="visual-card">
+          <p class="visual-label">动作示意</p>
+          <div class="icon-box" id="modalIcon"></div>
+        </div>
+        <div class="visual-card">
+          <p class="visual-label">发力肌群 <span class="red-dot">●</span></p>
+          <div class="muscle-box" id="modalMuscle"></div>
+        </div>
+      </div>
+      <div class="sets-log" id="modalSets"></div>
+    </div>
+  </div>
+
+  <script>
+/**
+ * 增肌打卡 · Haolin
+ * 本机 localStorage，无后端
+ */
+
+const STORAGE_KEY = "haolin_workout_v1";
+const DAY_LABELS = { push: "推（胸肩三头）", pull: "拉（背二头）", legs: "腿（臀腿核心）" };
+const DAY_SHORT = { push: "推", pull: "拉", legs: "腿" };
+const NEXT_DAY = { push: "pull", pull: "legs", legs: "push" };
+
+const PLAN = {
+  push: [
+    {
+      id: "bench",
+      name: "杠铃卧推",
+      sets: 3,
+      reps: "8–10",
+      muscles: ["chest", "front_delt", "triceps"],
+      muscleView: "front",
+      tips: "躺平脚踩稳，肩胛收紧。杠落到胸口中下部，肘约 45°，推起别锁死肘。",
+      icon: "bench",
+    },
+    {
+      id: "ohp",
+      name: "哑铃肩推",
+      sets: 3,
+      reps: "8–10",
+      muscles: ["front_delt", "side_delt", "triceps"],
+      muscleView: "front",
+      tips: "坐姿靠背，核心收紧。哑铃从耳侧推到头顶略前方，不要耸肩。",
+      icon: "ohp",
+    },
+    {
+      id: "fly",
+      name: "器械夹胸",
+      sets: 3,
+      reps: "10–12",
+      muscles: ["chest"],
+      muscleView: "front",
+      tips: "挺胸，手臂微屈固定，像抱树一样夹到中间，停半秒再慢慢打开。",
+      icon: "fly",
+    },
+    {
+      id: "lateral",
+      name: "侧平举",
+      sets: 3,
+      reps: "12–15",
+      muscles: ["side_delt"],
+      muscleView: "front",
+      tips: "微屈肘抬到接近肩高，掌心略朝下，顶峰停一下；重量宁轻勿晃。",
+      icon: "lateral",
+    },
+    {
+      id: "pushdown",
+      name: "绳索下压",
+      sets: 3,
+      reps: "10–12",
+      muscles: ["triceps"],
+      muscleView: "front",
+      tips: "肘贴身，只动前臂下压到大腿前，顶峰挤三头，控速回。",
+      icon: "pushdown",
+    },
+  ],
+  pull: [
+    {
+      id: "latpulldown",
+      name: "高位下拉",
+      sets: 3,
+      reps: "8–10",
+      muscles: ["lats", "biceps", "rear_delt"],
+      muscleView: "back",
+      tips: "宽握坐稳。先沉肩胛再拉到锁骨附近，肘朝下后方，胸挺起。",
+      icon: "latpulldown",
+    },
+    {
+      id: "seatedrow",
+      name: "坐姿划船",
+      sets: 3,
+      reps: "8–10",
+      muscles: ["midback", "lats", "biceps"],
+      muscleView: "back",
+      tips: "躯干直立，拉到肚脐附近，肩胛夹紧；回程伸直但不松垮圆背。",
+      icon: "seatedrow",
+    },
+    {
+      id: "tbar",
+      name: "胸托 T 杠划船",
+      sets: 3,
+      reps: "8–10",
+      muscles: ["midback", "lats", "rear_delt"],
+      muscleView: "back",
+      tips: "胸口贴垫，中立握。肩胛先沉，拉向腹部两侧，肘往后夹，别砸反弹。",
+      icon: "tbar",
+    },
+    {
+      id: "facecpull",
+      name: "面拉",
+      sets: 3,
+      reps: "12–15",
+      muscles: ["rear_delt", "midback"],
+      muscleView: "back",
+      tips: "绳索中高位，拉向脸前，肘外展与肩同高，像要把绳子撕开。",
+      icon: "facecpull",
+    },
+    {
+      id: "curl",
+      name: "哑铃弯举",
+      sets: 3,
+      reps: "10–12",
+      muscles: ["biceps"],
+      muscleView: "front",
+      tips: "肘贴身固定，只动前臂弯起；下放慢，别借腰晃。",
+      icon: "curl",
+    },
+  ],
+  legs: [
+    {
+      id: "squat",
+      name: "深蹲或腿举",
+      sets: 3,
+      reps: "8–10",
+      muscles: ["quads", "glutes"],
+      muscleView: "front",
+      tips: "脚与肩同宽，膝指向脚尖，蹲到大腿约平行。腿举时腰贴靠背别拱。",
+      icon: "squat",
+    },
+    {
+      id: "rdl",
+      name: "罗马尼亚硬拉",
+      sets: 3,
+      reps: "8–10",
+      muscles: ["hamstrings", "glutes", "lowerback"],
+      muscleView: "back",
+      tips: "微屈膝，髋往后折，杠贴腿下滑，背保持平直，感受腘绳肌拉伸。",
+      icon: "rdl",
+    },
+    {
+      id: "legcurl",
+      name: "腿弯举",
+      sets: 3,
+      reps: "10–12",
+      muscles: ["hamstrings"],
+      muscleView: "back",
+      tips: "趴姿或坐姿，把垫子弯向臀部，顶峰挤一下，下放控速。",
+      icon: "legcurl",
+    },
+    {
+      id: "legext",
+      name: "腿伸展",
+      sets: 3,
+      reps: "10–12",
+      muscles: ["quads"],
+      muscleView: "front",
+      tips: "坐稳，伸直到接近锁膝但别猛弹，顶峰停半秒再慢慢回。",
+      icon: "legext",
+    },
+    {
+      id: "core",
+      name: "卷腹或平板支撑",
+      sets: 3,
+      reps: "10–15 / 30–45秒",
+      muscles: ["abs"],
+      muscleView: "front",
+      tips: "卷腹下巴微收，用腹肌卷起；平板肘撑，身体一条直线，别塌腰。",
+      icon: "core",
+    },
+  ],
+};
+
+const MUSCLE_NAMES = {
+  chest: "胸大肌",
+  front_delt: "前三角",
+  side_delt: "侧三角",
+  rear_delt: "后三角",
+  triceps: "肱三头",
+  biceps: "肱二头",
+  lats: "背阔肌",
+  midback: "中上背",
+  lowerback: "竖脊肌",
+  quads: "股四头",
+  hamstrings: "腘绳肌",
+  glutes: "臀大肌",
+  abs: "腹直肌",
+};
+
+/* ========== SVG: 身体轮廓 + 肌群 ========== */
+function bodySvg(view, activeMuscles) {
+  const on = new Set(activeMuscles || []);
+  const fill = (id) => (on.has(id) ? "#ff4d4f" : "#3a4252");
+  const stroke = "#1a1e28";
+
+  if (view === "back") {
+    return `<svg viewBox="0 0 120 220" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <!-- head -->
+      <ellipse cx="60" cy="18" rx="14" ry="16" fill="#4a5366"/>
+      <!-- neck -->
+      <rect x="52" y="30" width="16" height="10" rx="3" fill="#4a5366"/>
+      <!-- torso outline -->
+      <path d="M35 42 Q60 38 85 42 L92 100 Q90 130 85 145 L75 145 L60 150 L45 145 L35 145 Q30 130 28 100 Z" fill="#2a3140" stroke="${stroke}" stroke-width="1"/>
+      <!-- rear delts -->
+      <ellipse cx="38" cy="52" rx="12" ry="10" fill="${fill("rear_delt")}" opacity="0.95"/>
+      <ellipse cx="82" cy="52" rx="12" ry="10" fill="${fill("rear_delt")}" opacity="0.95"/>
+      <!-- traps / upper midback -->
+      <path d="M48 42 L60 48 L72 42 L70 58 L60 62 L50 58 Z" fill="${fill("midback")}"/>
+      <!-- midback / rhomboids -->
+      <path d="M45 58 L60 64 L75 58 L78 95 L60 100 L42 95 Z" fill="${fill("midback")}"/>
+      <!-- lats -->
+      <path d="M30 70 Q38 65 45 75 L42 120 Q35 115 28 100 Z" fill="${fill("lats")}"/>
+      <path d="M90 70 Q82 65 75 75 L78 120 Q85 115 92 100 Z" fill="${fill("lats")}"/>
+      <!-- lower back -->
+      <path d="M48 100 L60 105 L72 100 L70 140 L60 145 L50 140 Z" fill="${fill("lowerback")}"/>
+      <!-- glutes -->
+      <ellipse cx="48" cy="155" rx="14" ry="12" fill="${fill("glutes")}"/>
+      <ellipse cx="72" cy="155" rx="14" ry="12" fill="${fill("glutes")}"/>
+      <!-- hamstrings -->
+      <path d="M36 165 L48 168 L52 200 L38 205 Q32 185 36 165Z" fill="${fill("hamstrings")}"/>
+      <path d="M84 165 L72 168 L68 200 L82 205 Q88 185 84 165Z" fill="${fill("hamstrings")}"/>
+      <!-- calves (dim) -->
+      <path d="M38 205 L48 208 L50 218 L36 216 Z" fill="#3a4252"/>
+      <path d="M82 205 L72 208 L70 218 L84 216 Z" fill="#3a4252"/>
+      <!-- arms back: triceps visible-ish -->
+      <path d="M22 55 L32 58 L30 100 L18 98 Z" fill="${fill("triceps")}" opacity="0.7"/>
+      <path d="M98 55 L88 58 L90 100 L102 98 Z" fill="${fill("triceps")}" opacity="0.7"/>
+      <text x="60" y="214" text-anchor="middle" fill="#8b95a8" font-size="8">背面</text>
+    </svg>`;
+  }
+
+  // front
+  return `<svg viewBox="0 0 120 220" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <ellipse cx="60" cy="18" rx="14" ry="16" fill="#4a5366"/>
+    <rect x="52" y="30" width="16" height="10" rx="3" fill="#4a5366"/>
+    <path d="M35 42 Q60 38 85 42 L92 100 Q90 130 85 145 L75 145 L60 150 L45 145 L35 145 Q30 130 28 100 Z" fill="#2a3140" stroke="${stroke}" stroke-width="1"/>
+    <!-- front / side delts -->
+    <ellipse cx="36" cy="52" rx="11" ry="11" fill="${fill("front_delt")}"/>
+    <ellipse cx="84" cy="52" rx="11" ry="11" fill="${fill("front_delt")}"/>
+    <ellipse cx="28" cy="58" rx="7" ry="9" fill="${fill("side_delt")}"/>
+    <ellipse cx="92" cy="58" rx="7" ry="9" fill="${fill("side_delt")}"/>
+    <!-- chest -->
+    <path d="M42 48 Q60 55 78 48 L80 78 Q60 88 40 78 Z" fill="${fill("chest")}"/>
+    <!-- abs -->
+    <rect x="50" y="88" width="20" height="12" rx="2" fill="${fill("abs")}"/>
+    <rect x="50" y="102" width="20" height="12" rx="2" fill="${fill("abs")}"/>
+    <rect x="50" y="116" width="20" height="12" rx="2" fill="${fill("abs")}"/>
+    <rect x="50" y="130" width="20" height="10" rx="2" fill="${fill("abs")}"/>
+    <!-- biceps -->
+    <path d="M18 58 L30 55 L32 90 L16 92 Z" fill="${fill("biceps")}"/>
+    <path d="M102 58 L90 55 L88 90 L104 92 Z" fill="${fill("biceps")}"/>
+    <!-- triceps (side strip) -->
+    <path d="M14 62 L18 60 L16 95 L10 93 Z" fill="${fill("triceps")}" opacity="0.85"/>
+    <path d="M106 62 L102 60 L104 95 L110 93 Z" fill="${fill("triceps")}" opacity="0.85"/>
+    <!-- quads -->
+    <path d="M38 150 L52 152 L54 200 L40 205 Q34 175 38 150Z" fill="${fill("quads")}"/>
+    <path d="M82 150 L68 152 L66 200 L80 205 Q86 175 82 150Z" fill="${fill("quads")}"/>
+    <!-- glutes hint front bottom -->
+    <ellipse cx="48" cy="148" rx="10" ry="6" fill="${fill("glutes")}" opacity="0.5"/>
+    <ellipse cx="72" cy="148" rx="10" ry="6" fill="${fill("glutes")}" opacity="0.5"/>
+    <path d="M40 205 L50 208 L52 218 L38 216 Z" fill="#3a4252"/>
+    <path d="M80 205 L70 208 L68 218 L82 216 Z" fill="#3a4252"/>
+    <text x="60" y="214" text-anchor="middle" fill="#8b95a8" font-size="8">正面</text>
+  </svg>`;
+}
+
+/* ========== 动作示意 SVG ========== */
+function exerciseIcon(kind) {
+  const common = `xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none" stroke="#e8ecf2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"`;
+  const accent = "#ff4d4f";
+  const icons = {
+    bench: `<svg ${common}>
+      <rect x="8" y="36" width="48" height="6" rx="2" fill="#3a4252" stroke="none"/>
+      <line x1="12" y1="42" x2="12" y2="52"/><line x1="52" y1="42" x2="52" y2="52"/>
+      <circle cx="32" cy="24" r="6" fill="#4a5366" stroke="none"/>
+      <path d="M20 28 L32 30 L44 28" stroke="${accent}"/>
+      <line x1="14" y1="26" x2="50" y2="26" stroke="${accent}" stroke-width="2.5"/>
+      <circle cx="14" cy="26" r="3" fill="${accent}" stroke="none"/>
+      <circle cx="50" cy="26" r="3" fill="${accent}" stroke="none"/>
+    </svg>`,
+    ohp: `<svg ${common}>
+      <circle cx="32" cy="28" r="5" fill="#4a5366" stroke="none"/>
+      <path d="M32 33 L32 48 M24 48 L40 48 M22 38 L26 42 M42 38 L38 42"/>
+      <line x1="18" y1="14" x2="46" y2="14" stroke="${accent}" stroke-width="2.5"/>
+      <circle cx="18" cy="14" r="3" fill="${accent}" stroke="none"/>
+      <circle cx="46" cy="14" r="3" fill="${accent}" stroke="none"/>
+      <path d="M22 22 L18 14 M42 22 L46 14" stroke="${accent}"/>
+    </svg>`,
+    fly: `<svg ${common}>
+      <circle cx="32" cy="26" r="5" fill="#4a5366" stroke="none"/>
+      <path d="M32 31 L32 46 M26 46 L38 46"/>
+      <path d="M18 24 Q32 36 46 24" stroke="${accent}" stroke-width="2.5"/>
+      <circle cx="16" cy="22" r="3" fill="${accent}" stroke="none"/>
+      <circle cx="48" cy="22" r="3" fill="${accent}" stroke="none"/>
+    </svg>`,
+    lateral: `<svg ${common}>
+      <circle cx="32" cy="22" r="5" fill="#4a5366" stroke="none"/>
+      <path d="M32 27 L32 44 M26 44 L38 44"/>
+      <line x1="12" y1="28" x2="24" y2="30" stroke="${accent}"/>
+      <line x1="52" y1="28" x2="40" y2="30" stroke="${accent}"/>
+      <circle cx="10" cy="28" r="3" fill="${accent}" stroke="none"/>
+      <circle cx="54" cy="28" r="3" fill="${accent}" stroke="none"/>
+    </svg>`,
+    pushdown: `<svg ${common}>
+      <path d="M20 8 H44" stroke="#8b95a8"/>
+      <path d="M32 8 V20" stroke="#8b95a8"/>
+      <path d="M24 20 H40" stroke="${accent}" stroke-width="2.5"/>
+      <path d="M26 20 V36 M38 20 V36" stroke="${accent}"/>
+      <path d="M22 36 H42" stroke="${accent}" stroke-width="2.5"/>
+      <circle cx="32" cy="48" r="5" fill="#4a5366" stroke="none"/>
+      <path d="M32 42 V48"/>
+    </svg>`,
+    latpulldown: `<svg ${common}>
+      <path d="M12 10 H52" stroke="#8b95a8"/>
+      <path d="M32 10 V16"/>
+      <line x1="16" y1="16" x2="48" y2="16" stroke="${accent}" stroke-width="2.5"/>
+      <path d="M20 16 L24 34 M44 16 L40 34" stroke="${accent}"/>
+      <circle cx="32" cy="40" r="5" fill="#4a5366" stroke="none"/>
+      <path d="M32 45 V54 M26 54 H38"/>
+    </svg>`,
+    seatedrow: `<svg ${common}>
+      <rect x="8" y="40" width="20" height="8" rx="2" fill="#3a4252" stroke="none"/>
+      <circle cx="36" cy="30" r="5" fill="#4a5366" stroke="none"/>
+      <path d="M36 35 L36 48 M30 48 L42 48"/>
+      <path d="M8 28 H22" stroke="${accent}" stroke-width="2.5"/>
+      <path d="M22 28 L32 32" stroke="${accent}"/>
+      <circle cx="8" cy="28" r="3" fill="${accent}" stroke="none"/>
+    </svg>`,
+    tbar: `<svg ${common}>
+      <path d="M12 48 L52 20" stroke="#8b95a8" stroke-width="3"/>
+      <circle cx="48" cy="22" r="6" fill="${accent}" stroke="none" opacity="0.85"/>
+      <circle cx="40" cy="28" r="5" fill="${accent}" stroke="none" opacity="0.6"/>
+      <circle cx="28" cy="36" r="4" fill="#4a5366" stroke="none"/>
+      <path d="M24 40 L32 34 L38 42" stroke="#e8ecf2"/>
+    </svg>`,
+    facecpull: `<svg ${common}>
+      <circle cx="32" cy="24" r="5" fill="#4a5366" stroke="none"/>
+      <path d="M32 29 L32 46 M26 46 L38 46"/>
+      <path d="M14 20 Q32 28 50 20" stroke="${accent}" stroke-width="2.5"/>
+      <path d="M18 20 L22 28 M46 20 L42 28" stroke="${accent}"/>
+    </svg>`,
+    curl: `<svg ${common}>
+      <circle cx="28" cy="18" r="4" fill="#4a5366" stroke="none"/>
+      <path d="M28 22 L28 36 L36 48"/>
+      <path d="M28 30 Q40 24 44 14" stroke="${accent}" stroke-width="2.5"/>
+      <circle cx="46" cy="12" r="4" fill="${accent}" stroke="none"/>
+    </svg>`,
+    squat: `<svg ${common}>
+      <circle cx="32" cy="14" r="5" fill="#4a5366" stroke="none"/>
+      <path d="M32 19 L32 32"/>
+      <path d="M22 32 L32 32 L42 32" stroke="${accent}"/>
+      <path d="M22 32 L18 48 M42 32 L46 48" stroke="${accent}"/>
+      <path d="M14 48 H22 M42 48 H50"/>
+      <line x1="18" y1="22" x2="46" y2="22" stroke="#8b95a8"/>
+    </svg>`,
+    rdl: `<svg ${common}>
+      <circle cx="38" cy="16" r="5" fill="#4a5366" stroke="none"/>
+      <path d="M38 21 L28 36 L22 50" stroke="${accent}"/>
+      <path d="M28 36 L40 40"/>
+      <line x1="14" y1="42" x2="36" y2="38" stroke="${accent}" stroke-width="2.5"/>
+      <circle cx="14" cy="42" r="3" fill="${accent}" stroke="none"/>
+      <circle cx="36" cy="38" r="3" fill="${accent}" stroke="none"/>
+    </svg>`,
+    legcurl: `<svg ${common}>
+      <path d="M10 28 H40" stroke="#8b95a8"/>
+      <circle cx="22" cy="24" r="4" fill="#4a5366" stroke="none"/>
+      <path d="M26 28 L40 28 L48 18" stroke="${accent}" stroke-width="2.5"/>
+      <circle cx="50" cy="16" r="3" fill="${accent}" stroke="none"/>
+    </svg>`,
+    legext: `<svg ${common}>
+      <rect x="18" y="20" width="22" height="10" rx="2" fill="#3a4252" stroke="none"/>
+      <circle cx="28" cy="16" r="4" fill="#4a5366" stroke="none"/>
+      <path d="M36 30 L48 46" stroke="${accent}" stroke-width="2.5"/>
+      <path d="M44 48 H54" stroke="${accent}"/>
+    </svg>`,
+    core: `<svg ${common}>
+      <circle cx="20" cy="22" r="4" fill="#4a5366" stroke="none"/>
+      <path d="M20 26 L32 30 L50 28" stroke="${accent}" stroke-width="2.5"/>
+      <path d="M32 30 L30 42 M50 28 L52 40"/>
+      <path d="M28 36 H40" stroke="${accent}"/>
+    </svg>`,
+  };
+  return icons[kind] || icons.bench;
+}
+
+/* ========== Storage ========== */
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) {
+      return { lastCompletedDay: null, today: null, history: [] };
+    }
+    return JSON.parse(raw);
+  } catch {
+    return { lastCompletedDay: null, today: null, history: [] };
+  }
+}
+
+function saveState(state) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+}
+
+function todayKey() {
+  const d = new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
+function emptySession(dayType) {
+  const exercises = PLAN[dayType].map((ex) => ({
+    id: ex.id,
+    sets: Array.from({ length: ex.sets }, () => ({
+      done: false,
+      weight: "",
+      reps: "",
+    })),
+  }));
+  return {
+    date: todayKey(),
+    dayType,
+    note: "",
+    exercises,
+    completedAt: null,
+  };
+}
+
+function ensureTodaySession(state, dayType) {
+  if (
+    state.today &&
+    state.today.date === todayKey() &&
+    state.today.dayType === dayType
+  ) {
+    return state.today;
+  }
+  // 若今天已有同日类型会话则保留；换日类型则新建
+  if (state.today && state.today.date === todayKey() && state.today.dayType !== dayType) {
+    state.today = emptySession(dayType);
+  } else if (!state.today || state.today.date !== todayKey()) {
+    state.today = emptySession(dayType);
+  } else {
+    state.today = emptySession(dayType);
+  }
+  saveState(state);
+  return state.today;
+}
+
+/* ========== UI ========== */
+const $ = (sel) => document.querySelector(sel);
+
+let state = loadState();
+let currentDay = null;
+let detailExId = null;
+
+function suggestedDay() {
+  if (!state.lastCompletedDay) return "push";
+  return NEXT_DAY[state.lastCompletedDay] || "push";
+}
+
+function updateSuggest() {
+  const s = suggestedDay();
+  const last = state.lastCompletedDay
+    ? DAY_SHORT[state.lastCompletedDay]
+    : null;
+  const el = $("#suggestText");
+  if (last) {
+    el.textContent = `建议今天练「${DAY_SHORT[s]}」（上次完成：${last}）`;
+  } else {
+    el.textContent = `新手建议从「推」开始 · 今天可练「${DAY_SHORT[s]}」`;
+  }
+}
+
+function setActiveDayBtns(day) {
+  document.querySelectorAll(".day-btn").forEach((btn) => {
+    btn.classList.toggle("active", btn.dataset.day === day);
+  });
+}
+
+function findExData(dayType, exId) {
+  return PLAN[dayType].find((e) => e.id === exId);
+}
+
+function findSessionEx(exId) {
+  return state.today.exercises.find((e) => e.id === exId);
+}
+
+function progressStats() {
+  if (!state.today) return { done: 0, total: 0 };
+  let done = 0;
+  let total = 0;
+  state.today.exercises.forEach((ex) => {
+    ex.sets.forEach((s) => {
+      total += 1;
+      if (s.done) done += 1;
+    });
+  });
+  return { done, total };
+}
+
+function updateProgress() {
+  const { done, total } = progressStats();
+  const pct = total ? Math.round((done / total) * 100) : 0;
+  $("#progressFill").style.width = `${pct}%`;
+  $("#progressText").textContent = `${done} / ${total} 组`;
+}
+
+function renderExercises() {
+  const list = $("#exerciseList");
+  list.innerHTML = "";
+  if (!state.today) return;
+
+  PLAN[state.today.dayType].forEach((exDef, idx) => {
+    const sess = state.today.exercises[idx];
+    const allDone = sess.sets.every((s) => s.done);
+    const muscleLabel = exDef.muscles.map((m) => MUSCLE_NAMES[m] || m).join(" · ");
+
+    const card = document.createElement("article");
+    card.className = "ex-card" + (allDone ? " done" : "");
+    card.innerHTML = `
+      <div class="ex-head">
+        <div class="ex-thumb">${exerciseIcon(exDef.icon)}</div>
+        <div class="ex-meta">
+          <div class="ex-name">${exDef.name}</div>
+          <div class="ex-reps">${exDef.sets} 组 × ${exDef.reps} 次</div>
+          <div class="ex-muscles">肌群：${muscleLabel}</div>
+        </div>
+        <button type="button" class="btn-detail" data-detail="${exDef.id}">示意</button>
+      </div>
+      <div class="sets-row" data-ex="${exDef.id}"></div>
+    `;
+
+    const setsRow = card.querySelector(".sets-row");
+    sess.sets.forEach((set, si) => {
+      const chip = document.createElement("button");
+      chip.type = "button";
+      chip.className = "set-chip" + (set.done ? " checked" : "");
+      const wr =
+        set.weight || set.reps
+          ? `${set.weight || "—"}${set.weight ? "kg" : ""} × ${set.reps || "—"}`
+          : "点我打卡";
+      chip.innerHTML = `<strong>第 ${si + 1} 组</strong>${set.done ? "✓ " + wr : wr}`;
+      chip.addEventListener("click", () => {
+        // 简单切换完成；若要记重量打开详情
+        set.done = !set.done;
+        saveState(state);
+        renderExercises();
+        updateProgress();
+      });
+      chip.addEventListener("contextmenu", (e) => {
+        e.preventDefault();
+        openDetail(exDef.id);
+      });
+      setsRow.appendChild(chip);
+    });
+
+    card.querySelector("[data-detail]").addEventListener("click", () => {
+      openDetail(exDef.id);
+    });
+
+    list.appendChild(card);
+  });
+
+  updateProgress();
+}
+
+function selectDay(day) {
+  currentDay = day;
+  setActiveDayBtns(day);
+  ensureTodaySession(state, day);
+  // 重新同步 exercises 长度（防计划变更）
+  const plan = PLAN[day];
+  const byId = Object.fromEntries(state.today.exercises.map((e) => [e.id, e]));
+  state.today.exercises = plan.map((ex) => {
+    if (byId[ex.id]) {
+      // 保证组数
+      while (byId[ex.id].sets.length < ex.sets) {
+        byId[ex.id].sets.push({ done: false, weight: "", reps: "" });
+      }
+      byId[ex.id].sets = byId[ex.id].sets.slice(0, ex.sets);
+      return byId[ex.id];
+    }
+    return {
+      id: ex.id,
+      sets: Array.from({ length: ex.sets }, () => ({
+        done: false,
+        weight: "",
+        reps: "",
+      })),
+    };
+  });
+  state.today.dayType = day;
+  saveState(state);
+
+  $("#sessionPanel").hidden = false;
+  $("#historyPanel").hidden = true;
+  $("#sessionTitle").textContent = `今日 · ${DAY_LABELS[day]}`;
+  $("#sessionNote").value = state.today.note || "";
+  renderExercises();
+}
+
+function openDetail(exId) {
+  detailExId = exId;
+  const exDef = findExData(state.today.dayType, exId);
+  const sess = findSessionEx(exId);
+  if (!exDef || !sess) return;
+
+  $("#modalTitle").textContent = exDef.name;
+  $("#modalTips").textContent = exDef.tips;
+  $("#modalIcon").innerHTML = exerciseIcon(exDef.icon);
+  $("#modalMuscle").innerHTML = bodySvg(exDef.muscleView, exDef.muscles);
+
+  const setsEl = $("#modalSets");
+  setsEl.innerHTML = `<h4>记录每组重量 × 次数</h4>`;
+  sess.sets.forEach((set, si) => {
+    const row = document.createElement("div");
+    row.className = "log-set";
+    row.innerHTML = `
+      <div class="log-set-top">
+        <label>
+          <input type="checkbox" ${set.done ? "checked" : ""} data-si="${si}" />
+          第 ${si + 1} 组完成
+        </label>
+      </div>
+      <div class="log-fields">
+        <div>
+          <label>重量 (kg)</label>
+          <input type="number" inputmode="decimal" min="0" step="0.5" placeholder="如 40" value="${set.weight}" data-w="${si}" />
+        </div>
+        <div>
+          <label>次数</label>
+          <input type="number" inputmode="numeric" min="0" step="1" placeholder="如 10" value="${set.reps}" data-r="${si}" />
+        </div>
+      </div>
+    `;
+    row.querySelector('input[type="checkbox"]').addEventListener("change", (e) => {
+      set.done = e.target.checked;
+      saveState(state);
+      renderExercises();
+    });
+    row.querySelector(`[data-w="${si}"]`).addEventListener("input", (e) => {
+      set.weight = e.target.value;
+      saveState(state);
+      renderExercises();
+    });
+    row.querySelector(`[data-r="${si}"]`).addEventListener("input", (e) => {
+      set.reps = e.target.value;
+      saveState(state);
+      renderExercises();
+    });
+    setsEl.appendChild(row);
+  });
+
+  $("#detailModal").hidden = false;
+}
+
+function closeDetail() {
+  $("#detailModal").hidden = true;
+  detailExId = null;
+  renderExercises();
+}
+
+function completeSession() {
+  if (!state.today) return;
+  const { done, total } = progressStats();
+  if (done === 0) {
+    alert("还没有勾选任何一组，先打卡再完成吧。");
+    return;
+  }
+  state.today.note = $("#sessionNote").value.trim();
+  state.today.completedAt = new Date().toISOString();
+  state.lastCompletedDay = state.today.dayType;
+
+  // 写入历史（同日同类型覆盖）
+  const snap = JSON.parse(JSON.stringify(state.today));
+  state.history = state.history.filter(
+    (h) => !(h.date === snap.date && h.dayType === snap.dayType)
+  );
+  state.history.unshift(snap);
+  if (state.history.length > 60) state.history = state.history.slice(0, 60);
+
+  saveState(state);
+  updateSuggest();
+  alert(`已保存！完成 ${done}/${total} 组。下次建议练「${DAY_SHORT[suggestedDay()]}」。`);
+}
+
+function resetDayChecks() {
+  if (!state.today) return;
+  if (!confirm("清空今日所有勾选和重量记录？")) return;
+  state.today.exercises.forEach((ex) => {
+    ex.sets.forEach((s) => {
+      s.done = false;
+      s.weight = "";
+      s.reps = "";
+    });
+  });
+  state.today.note = "";
+  state.today.completedAt = null;
+  $("#sessionNote").value = "";
+  saveState(state);
+  renderExercises();
+}
+
+function formatDate(isoDate) {
+  // isoDate: YYYY-MM-DD
+  const [y, m, d] = isoDate.split("-").map(Number);
+  return `${y}年${m}月${d}日`;
+}
+
+function renderHistory() {
+  const list = $("#historyList");
+  const empty = $("#historyEmpty");
+  list.innerHTML = "";
+  if (!state.history.length) {
+    empty.hidden = false;
+    return;
+  }
+  empty.hidden = true;
+  state.history.forEach((h) => {
+    let done = 0;
+    let total = 0;
+    h.exercises.forEach((ex) =>
+      ex.sets.forEach((s) => {
+        total++;
+        if (s.done) done++;
+      })
+    );
+    const li = document.createElement("li");
+    li.className = "history-item";
+    li.innerHTML = `
+      <div class="hi-top">
+        <span class="hi-day">${DAY_LABELS[h.dayType] || h.dayType}</span>
+        <span class="hi-date">${formatDate(h.date)}</span>
+      </div>
+      <div class="hi-stats">完成 ${done}/${total} 组</div>
+      ${h.note ? `<div class="hi-note">备注：${escapeHtml(h.note)}</div>` : ""}
+    `;
+    list.appendChild(li);
+  });
+}
+
+function escapeHtml(str) {
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+/* ========== Init ========== */
+function init() {
+  updateSuggest();
+
+  document.querySelectorAll(".day-btn").forEach((btn) => {
+    btn.addEventListener("click", () => selectDay(btn.dataset.day));
+  });
+
+  $("#sessionNote").addEventListener("input", (e) => {
+    if (!state.today) return;
+    state.today.note = e.target.value;
+    saveState(state);
+  });
+
+  $("#btnComplete").addEventListener("click", completeSession);
+  $("#btnResetDay").addEventListener("click", resetDayChecks);
+
+  $("#btnHistory").addEventListener("click", () => {
+    $("#sessionPanel").hidden = true;
+    $("#historyPanel").hidden = false;
+    renderHistory();
+  });
+  $("#btnBackSession").addEventListener("click", () => {
+    $("#historyPanel").hidden = true;
+    if (currentDay) {
+      $("#sessionPanel").hidden = false;
+    }
+  });
+
+  document.querySelectorAll("[data-close]").forEach((el) => {
+    el.addEventListener("click", closeDetail);
+  });
+
+  // 若今天已有未完成会话，自动打开
+  if (state.today && state.today.date === todayKey()) {
+    selectDay(state.today.dayType);
+  } else {
+    // 高亮建议日，不强制进入
+    setActiveDayBtns(suggestedDay());
+  }
+}
+
+init();
+
+</script>
+</body>
+</html>
