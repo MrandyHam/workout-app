@@ -193,7 +193,7 @@ body {
   align-items: flex-start;
 }
 .ex-thumb {
-  width: 56px;
+  width: 76px;
   height: 56px;
   flex-shrink: 0;
   background: var(--bg2);
@@ -204,7 +204,7 @@ body {
   overflow: hidden;
   border: 1px solid var(--border);
 }
-.ex-thumb svg { width: 48px; height: 48px; }
+.ex-thumb svg { width: 72px; height: 54px; display:block; }
 .ex-meta { flex: 1; min-width: 0; }
 .ex-name {
   font-size: 1.02rem;
@@ -452,9 +452,10 @@ body {
   justify-content: center;
   min-height: 140px;
 }
+.modal-visuals { grid-template-columns: 1fr !important; display: grid; gap: 10px; }
 .icon-box svg, .muscle-box svg {
   width: 100%;
-  max-width: 140px;
+  max-width: 340px;
   height: auto;
 }
 
@@ -800,200 +801,215 @@ const MUSCLE_NAMES = {
   abs: "腹直肌",
 };
 
-/* ========== SVG: 身体轮廓 + 肌群 ========== */
-function bodySvg(view, activeMuscles) {
-  const on = new Set(activeMuscles || []);
-  const fill = (id) => (on.has(id) ? "#ff4d4f" : "#3a4252");
-  const stroke = "#1a1e28";
+/* ========== 肌群图：正面 + 背面解剖 ========== */
+const MUSCLE_MAP = {
+  bench:{p:["chest"],s:["front_delt","triceps"]},
+  ohp:{p:["front_delt","side_delt"],s:["triceps","traps"]},
+  fly:{p:["chest"],s:["front_delt","biceps"]},
+  lateral:{p:["side_delt"],s:["front_delt","traps"]},
+  pushdown:{p:["triceps"],s:["forearms"]},
+  latpulldown:{p:["lats"],s:["biceps","rear_delt","midback","forearms"]},
+  seatedrow:{p:["midback","lats"],s:["biceps","rear_delt","traps","forearms"]},
+  tbar:{p:["midback","lats"],s:["rear_delt","biceps","traps","forearms"]},
+  facecpull:{p:["rear_delt","midback"],s:["traps","side_delt"]},
+  curl:{p:["biceps"],s:["forearms"]},
+  squat:{p:["quads","glutes"],s:["hamstrings","lowerback","calves"]},
+  rdl:{p:["hamstrings","glutes"],s:["lowerback","forearms","traps"]},
+  legcurl:{p:["hamstrings"],s:["calves"]},
+  legext:{p:["quads"],s:[]},
+  core:{p:["abs"],s:["obliques"]},
+};
+Object.assign(MUSCLE_NAMES,{forearms:"前臂",obliques:"腹斜肌",traps:"斜方肌",calves:"小腿",midback:"菱形肌/中背"});
 
-  if (view === "back") {
-    return `<svg viewBox="0 0 120 220" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-      <!-- head -->
-      <ellipse cx="60" cy="18" rx="14" ry="16" fill="#4a5366"/>
-      <!-- neck -->
-      <rect x="52" y="30" width="16" height="10" rx="3" fill="#4a5366"/>
-      <!-- torso outline -->
-      <path d="M35 42 Q60 38 85 42 L92 100 Q90 130 85 145 L75 145 L60 150 L45 145 L35 145 Q30 130 28 100 Z" fill="#2a3140" stroke="${stroke}" stroke-width="1"/>
-      <!-- rear delts -->
-      <ellipse cx="38" cy="52" rx="12" ry="10" fill="${fill("rear_delt")}" opacity="0.95"/>
-      <ellipse cx="82" cy="52" rx="12" ry="10" fill="${fill("rear_delt")}" opacity="0.95"/>
-      <!-- traps / upper midback -->
-      <path d="M48 42 L60 48 L72 42 L70 58 L60 62 L50 58 Z" fill="${fill("midback")}"/>
-      <!-- midback / rhomboids -->
-      <path d="M45 58 L60 64 L75 58 L78 95 L60 100 L42 95 Z" fill="${fill("midback")}"/>
-      <!-- lats -->
-      <path d="M30 70 Q38 65 45 75 L42 120 Q35 115 28 100 Z" fill="${fill("lats")}"/>
-      <path d="M90 70 Q82 65 75 75 L78 120 Q85 115 92 100 Z" fill="${fill("lats")}"/>
-      <!-- lower back -->
-      <path d="M48 100 L60 105 L72 100 L70 140 L60 145 L50 140 Z" fill="${fill("lowerback")}"/>
-      <!-- glutes -->
-      <ellipse cx="48" cy="155" rx="14" ry="12" fill="${fill("glutes")}"/>
-      <ellipse cx="72" cy="155" rx="14" ry="12" fill="${fill("glutes")}"/>
-      <!-- hamstrings -->
-      <path d="M36 165 L48 168 L52 200 L38 205 Q32 185 36 165Z" fill="${fill("hamstrings")}"/>
-      <path d="M84 165 L72 168 L68 200 L82 205 Q88 185 84 165Z" fill="${fill("hamstrings")}"/>
-      <!-- calves (dim) -->
-      <path d="M38 205 L48 208 L50 218 L36 216 Z" fill="#3a4252"/>
-      <path d="M82 205 L72 208 L70 218 L84 216 Z" fill="#3a4252"/>
-      <!-- arms back: triceps visible-ish -->
-      <path d="M22 55 L32 58 L30 100 L18 98 Z" fill="${fill("triceps")}" opacity="0.7"/>
-      <path d="M98 55 L88 58 L90 100 L102 98 Z" fill="${fill("triceps")}" opacity="0.7"/>
-      <text x="60" y="214" text-anchor="middle" fill="#8b95a8" font-size="8">背面</text>
-    </svg>`;
+const BODY_FRONT = {
+  _sil:"M50 27 L44 27 Q40 31 30 33 Q20 35 19 48 Q17 60 18 70 Q14 82 14 94 L12 104 L18 106 L21 95 Q27 82 29 70 L31 60 Q33 72 32 86 Q30 96 31 110 Q29 130 31 148 Q29 170 32 194 L30 203 L42 203 L41 194 Q44 172 42 154 Q46 130 48 112 L50 109 Z",
+  traps:["M45 27 Q41 31 34 33 L45 34 Z"],
+  front_delt:["M34 34 Q27 34 25 40 Q27 46 31 47 Q34 41 38 37 Z"],
+  side_delt:["M27 34 Q20 37 20 48 L23 50 Q23 41 28 37 Z"],
+  chest:["M38 36 Q44 35 49.3 37 L49.3 55 Q42 59 34 54 Q31 48 33 44 Q35 39 38 36 Z"],
+  biceps:["M23 51 Q20 58 21 68 Q24 70 27 67 Q29 58 28 50 Q26 48 23 51 Z"],
+  triceps:["M28.5 50 Q30.5 58 28.5 67 L30 64 Q31.5 56 30.5 48 Z"],
+  forearms:["M20.5 70 Q16 80 15.5 93 L20 94 Q25 83 28.5 70 Q25 72 20.5 70 Z"],
+  abs:["M43 58.5 L49.3 58.5 L49.3 66 L43 66.5 Z","M43 68 L49.3 67.5 L49.3 76 L43 76.5 Z","M43 78 L49.3 77.5 L49.3 86.5 L43 87 Z","M43 88.5 L49.3 88 L49.3 104 Q45 101 43 97 Z"],
+  obliques:["M34 56 Q37 57 41.5 58.5 L41.5 98 Q37 95 33.5 88 Q34.5 72 34 56 Z"],
+  quads:["M34 100 Q30 116 32 138 Q35 146 40.5 146 Q46 126 47.5 108 Q41 103 34 100 Z"],
+  calves:["M33 157 Q30 172 34 191 L39 191 Q42.5 172 41 157 Q37 155 33 157 Z"],
+  _n:["M48 109 Q47 126 42.5 146 L44.5 144 Q49 128 49.3 112 Z"],
+};
+const BODY_BACK = {
+  _sil:BODY_FRONT._sil,
+  traps:["M50 23 L45 26.5 Q40 31 31 33.5 Q40 37 43.5 44 L50 60 Z"],
+  rear_delt:["M31 34.5 Q25 36 23.5 43 Q29 44.5 34 39.5 Z"],
+  side_delt:["M27 34 Q20 37 20 48 L23 50 Q22 41 26 37 Z"],
+  triceps:["M23 50 Q19 58 21 68 L28 67.5 Q29.5 58 28 49 Q25 47.5 23 50 Z"],
+  forearms:["M20.5 70 Q16 80 15.5 93 L20 94 Q25 83 28.5 70 Q25 72 20.5 70 Z"],
+  midback:["M42.5 45 Q36.5 46.5 35.5 53 Q41 59 49.3 63 L49.3 58 Z"],
+  lats:["M34.5 52 Q30 64 33 79 Q38 89 44 93 L45 78 Q40 65 35.5 55 Z"],
+  lowerback:["M45.5 64 L49.3 65 L49.3 98 L44 96 Q46 82 45.5 64 Z"],
+  obliques:["M33 81 Q33.5 90 35 96 L43 96 Q38 91 33 81 Z"],
+  glutes:["M33.5 97 Q30 108 33.5 118 Q42 124 49.3 119 L49.3 99 Q41 95 33.5 97 Z"],
+  hamstrings:["M33 121 Q31 134 33 146 Q38 150 42 148 Q47 134 48 123 Q40 125 33 121 Z"],
+  calves:["M32.5 154 Q29 166 33 180 Q37 184 41 180 Q43.5 166 41.5 154 Q37 151 32.5 154 Z"],
+};
+function bodyHalf(map, P, S){
+  let out="";
+  for (const k in map){
+    if(k==="_sil") continue;
+    const cls = P.has(k)?"mp":S.has(k)?"ms":"mn";
+    map[k].forEach(d=>{ out+=`<path class="${cls}" d="${d}"/>`; });
   }
-
-  // front
-  return `<svg viewBox="0 0 120 220" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-    <ellipse cx="60" cy="18" rx="14" ry="16" fill="#4a5366"/>
-    <rect x="52" y="30" width="16" height="10" rx="3" fill="#4a5366"/>
-    <path d="M35 42 Q60 38 85 42 L92 100 Q90 130 85 145 L75 145 L60 150 L45 145 L35 145 Q30 130 28 100 Z" fill="#2a3140" stroke="${stroke}" stroke-width="1"/>
-    <!-- front / side delts -->
-    <ellipse cx="36" cy="52" rx="11" ry="11" fill="${fill("front_delt")}"/>
-    <ellipse cx="84" cy="52" rx="11" ry="11" fill="${fill("front_delt")}"/>
-    <ellipse cx="28" cy="58" rx="7" ry="9" fill="${fill("side_delt")}"/>
-    <ellipse cx="92" cy="58" rx="7" ry="9" fill="${fill("side_delt")}"/>
-    <!-- chest -->
-    <path d="M42 48 Q60 55 78 48 L80 78 Q60 88 40 78 Z" fill="${fill("chest")}"/>
-    <!-- abs -->
-    <rect x="50" y="88" width="20" height="12" rx="2" fill="${fill("abs")}"/>
-    <rect x="50" y="102" width="20" height="12" rx="2" fill="${fill("abs")}"/>
-    <rect x="50" y="116" width="20" height="12" rx="2" fill="${fill("abs")}"/>
-    <rect x="50" y="130" width="20" height="10" rx="2" fill="${fill("abs")}"/>
-    <!-- biceps -->
-    <path d="M18 58 L30 55 L32 90 L16 92 Z" fill="${fill("biceps")}"/>
-    <path d="M102 58 L90 55 L88 90 L104 92 Z" fill="${fill("biceps")}"/>
-    <!-- triceps (side strip) -->
-    <path d="M14 62 L18 60 L16 95 L10 93 Z" fill="${fill("triceps")}" opacity="0.85"/>
-    <path d="M106 62 L102 60 L104 95 L110 93 Z" fill="${fill("triceps")}" opacity="0.85"/>
-    <!-- quads -->
-    <path d="M38 150 L52 152 L54 200 L40 205 Q34 175 38 150Z" fill="${fill("quads")}"/>
-    <path d="M82 150 L68 152 L66 200 L80 205 Q86 175 82 150Z" fill="${fill("quads")}"/>
-    <!-- glutes hint front bottom -->
-    <ellipse cx="48" cy="148" rx="10" ry="6" fill="${fill("glutes")}" opacity="0.5"/>
-    <ellipse cx="72" cy="148" rx="10" ry="6" fill="${fill("glutes")}" opacity="0.5"/>
-    <path d="M40 205 L50 208 L52 218 L38 216 Z" fill="#3a4252"/>
-    <path d="M80 205 L70 208 L68 218 L82 216 Z" fill="#3a4252"/>
-    <text x="60" y="214" text-anchor="middle" fill="#8b95a8" font-size="8">正面</text>
-  </svg>`;
+  return out;
+}
+function bodyFig(map,P,S,x,label){
+  const half = bodyHalf(map,P,S);
+  const sil = `<path d="${map._sil}" fill="#20252f"/>`;
+  return `<g transform="translate(${x},0)">
+    <ellipse cx="50" cy="15" rx="8.5" ry="10.5" fill="#2c3340"/>
+    <path d="M45 23 L55 23 L56 29 L44 29Z" fill="#2c3340"/>
+    ${sil}<g transform="translate(100,0) scale(-1,1)">${sil}</g>
+    ${half}<g transform="translate(100,0) scale(-1,1)">${half}</g>
+    <ellipse cx="17" cy="100" rx="3.5" ry="5" fill="#2c3340"/><ellipse cx="83" cy="100" rx="3.5" ry="5" fill="#2c3340"/>
+    <text x="50" y="214" text-anchor="middle" fill="#8b95a8" font-size="8">${label}</text></g>`;
+}
+function bodySvg(view, activeMuscles, exId) {
+  const m = MUSCLE_MAP[exId] || {p:activeMuscles||[],s:[]};
+  const P=new Set(m.p), S=new Set(m.s);
+  return `<svg class="musclemap" viewBox="0 0 210 240" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+  <defs><style>
+   .mn{fill:#3c4456;stroke:#161a22;stroke-width:.6}
+   .ms{fill:#ff9459;stroke:#3a1a10;stroke-width:.6}
+   .mp{fill:#ff3030;stroke:#4a0c0c;stroke-width:.6;filter:url(#glow)}
+  </style>
+  <filter id="glow" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="1.4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
+  ${bodyFig(BODY_FRONT,P,S,2,"正面")}${bodyFig(BODY_BACK,P,S,108,"背面")}
+  <g font-size="7.5" fill="#c9d1de">
+   <rect x="22" y="226" width="8" height="8" rx="2" fill="#ff3030"/><text x="33" y="233">主要</text>
+   <rect x="82" y="226" width="8" height="8" rx="2" fill="#ff9459"/><text x="93" y="233">次要</text>
+   <rect x="142" y="226" width="8" height="8" rx="2" fill="#3c4456"/><text x="153" y="233">未参与</text>
+  </g></svg>`;
 }
 
-/* ========== 动作示意 SVG ========== */
+/* ========== 动作示意：比例人体 + 器械 + 起止姿态 ========== */
+const L = {sh:24, th:34, to:44, ua:24, fa:22, ft:10, neck:6, head:8.5};
+const dir = (a)=>{const r=a*Math.PI/180;return [Math.sin(r),Math.cos(r)];};
+const add=(p,a,l)=>{const d=dir(a);return [p[0]+d[0]*l,p[1]+d[1]*l];};
+function solve(q){
+  const j={};
+  if(q.ankle){ j.ankle=q.ankle; j.knee=add(j.ankle,q.sh,L.sh); j.hip=add(j.knee,q.th,L.th); }
+  else { j.hip=q.hip; j.knee=add(j.hip,q.th,L.th); j.ankle=add(j.knee,q.sh,L.sh); }
+  j.toe=add(j.ankle,q.ft??90,L.ft);
+  j.sho=add(j.hip,q.to,L.to);
+  j.neck=add(j.sho,q.to+(q.nk||0),L.neck);
+  j.head=add(j.neck,q.to+(q.nk||0),L.head);
+  j.elb=add(j.sho,q.ua,L.ua);
+  j.wri=add(j.elb,q.fa,L.fa);
+  return j;
+}
+const ln=(a,b,w,c,extra="")=>`<line x1="${a[0].toFixed(1)}" y1="${a[1].toFixed(1)}" x2="${b[0].toFixed(1)}" y2="${b[1].toFixed(1)}" stroke="${c}" stroke-width="${w}" stroke-linecap="round" ${extra}/>`;
+function person(j, ghost, hl){
+  hl=new Set(hl||[]);
+  const base = ghost? "#6f7a90" : "url(#skin)";
+  const far = ghost? "#596378" : "#8994a8";
+  const H = (k,c)=> (!ghost && hl.has(k)) ? "url(#hot)" : c;
+  const o = ghost? `opacity=".38"` : "";
+  const sh=(p)=>[p[0]+3,p[1]-2.5];
+  let s=`<g ${o}>`;
+  // far limbs
+  s+=ln(sh(j.hip),sh(j.knee),10,H("thigh",far))+ln(sh(j.knee),sh(j.ankle),7.5,H("shin",far))+ln(sh(j.ankle),sh(j.toe),4.5,far);
+  s+=ln(sh(j.sho),sh(j.elb),7.5,H("ua",far))+ln(sh(j.elb),sh(j.wri),6,H("fa",far));
+  // torso (tapered: chest wider)
+  const mid=[(j.hip[0]*.45+j.sho[0]*.55),(j.hip[1]*.45+j.sho[1]*.55)];
+  s+=ln(j.hip,mid,14,H("torso",base))+ln(mid,j.sho,16.5,H("torso",base));
+  s+=ln(j.sho,j.neck,6,base);
+  s+=`<circle cx="${j.head[0].toFixed(1)}" cy="${j.head[1].toFixed(1)}" r="${L.head}" fill="${base}"/>`;
+  // near limbs
+  s+=ln(j.hip,j.knee,11.5,H("thigh",base))+ln(j.knee,j.ankle,8.5,H("shin",base))+ln(j.ankle,j.toe,5,base);
+  s+=ln(j.sho,j.elb,8.5,H("ua",base))+ln(j.elb,j.wri,7,H("fa",base));
+  s+=`<circle cx="${j.wri[0].toFixed(1)}" cy="${j.wri[1].toFixed(1)}" r="3.6" fill="${base}"/>`;
+  return s+"</g>";
+}
+const M="#55607a", MD="#39414f", STEEL="#aab3c2";
+const rect=(x,y,w,h,c=M,r=2)=>`<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${r}" fill="${c}"/>`;
+const plate=(p,r=11)=>`<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="${r}" fill="#22272f" stroke="${STEEL}" stroke-width="2.2"/><circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="2.2" fill="${STEEL}"/>`;
+const db=(p)=>`<g transform="translate(${p[0].toFixed(1)},${p[1].toFixed(1)})"><rect x="-9" y="-1.6" width="18" height="3.2" fill="${STEEL}"/><rect x="-10" y="-5" width="4.5" height="10" rx="1.2" fill="#2b3039" stroke="${STEEL}" stroke-width="1.2"/><rect x="5.5" y="-5" width="4.5" height="10" rx="1.2" fill="#2b3039" stroke="${STEEL}" stroke-width="1.2"/></g>`;
+const cable=(a,b)=>ln(a,b,1.4,"#d6dbe4",`stroke-dasharray="0"`);
+const pulley=(p)=>`<circle cx="${p[0]}" cy="${p[1]}" r="4.5" fill="#22272f" stroke="${STEEL}" stroke-width="1.6"/>`;
+const floor=`<line x1="6" y1="146" x2="194" y2="146" stroke="#3a4252" stroke-width="2"/>`;
+function arrow(a,b,bend=0){
+  const mx=(a[0]+b[0])/2, my=(a[1]+b[1])/2, dx=b[0]-a[0], dy=b[1]-a[1], len=Math.hypot(dx,dy)||1;
+  const c=[mx-dy/len*bend, my+dx/len*bend];
+  return `<path d="M${a[0].toFixed(1)} ${a[1].toFixed(1)} Q${c[0].toFixed(1)} ${c[1].toFixed(1)} ${b[0].toFixed(1)} ${b[1].toFixed(1)}" fill="none" stroke="#ffd166" stroke-width="2" stroke-dasharray="4 3" marker-end="url(#ah)"/>`;
+}
+const POSES = {
+  bench:{a:{hip:[118,96],to:270,nk:0,th:80,sh:5,ua:355,fa:178},b:{hip:[118,96],to:270,th:80,sh:5,ua:180,fa:180},track:"wri",hl:["torso","ua"],
+    eq:(A,B)=>rect(60,100,72,7)+rect(70,107,5,39,MD,1)+rect(120,107,5,39,MD,1)+rect(52,40,6,106,MD,1)+`<path d="M50 52 h10" stroke="${STEEL}" stroke-width="3"/>`,
+    tool:(j)=>plate(j.wri,12)},
+  ohp:{a:{hip:[100,104],to:180,th:90,sh:0,ua:80,fa:178},b:{hip:[100,104],to:180,th:90,sh:0,ua:172,fa:178},track:"wri",hl:["ua"],
+    eq:()=>rect(84,106,40,6)+rect(84,50,7,58)+rect(100,112,5,34,MD,1),tool:(j)=>db(j.wri)},
+  fly:{front:true,a:{abd:88,cross:0},b:{abd:88,cross:1},track:"wri",
+    eq:()=>rect(84,40,32,72,MD,4)},
+  lateral:{front:true,a:{abd:10,cross:0},b:{abd:85,cross:0},track:"wri",tool:true},
+  pushdown:{a:{ankle:[96,140],sh:180,th:182,to:172,ua:8,fa:150},b:{ankle:[96,140],sh:180,th:182,to:172,ua:8,fa:6},track:"wri",hl:["ua"],
+    eq:(A,B)=>rect(140,14,8,132,MD,1)+pulley([136,22])+cable([136,22],B.wri)+cable([136,22],A.wri).replace('stroke="#d6dbe4"','stroke="#d6dbe4" opacity=".35"')},
+  latpulldown:{a:{hip:[96,108],to:180,th:90,sh:0,ua:172,fa:180},b:{hip:[96,108],to:178,th:90,sh:0,ua:340,fa:168},track:"wri",hl:["torso"],
+    eq:(A,B)=>rect(80,110,40,6)+rect(96,116,5,30,MD,1)+rect(118,88,18,6)+rect(150,6,8,140,MD,1)+pulley([146,10])+cable([146,10],B.wri)+rect(B.wri[0]-14,B.wri[1]-2,28,4,STEEL,1)},
+  seatedrow:{a:{hip:[66,118],to:178,th:82,sh:30,ft:160,ua:92,fa:92},b:{hip:[66,118],to:185,th:82,sh:30,ft:160,ua:330,fa:82},track:"wri",hl:["torso"],
+    eq:(A,B)=>rect(40,120,70,7)+rect(52,127,5,19,MD,1)+rect(110,108,6,38,M,1)+rect(176,30,8,116,MD,1)+pulley([170,106])+cable([170,106],B.wri)},
+  tbar:{a:{ankle:[136,140],sh:178,th:186,to:132,nk:-10,ua:2,fa:0},b:{ankle:[136,140],sh:178,th:186,to:132,nk:-10,ua:300,fa:20},track:"wri",hl:["torso"],
+    eq:(A,B)=>`<path d="M98 60 L130 88 L122 96 L90 68Z" fill="${M}"/>`+rect(112,94,6,52,MD,1)+rect(124,136,30,5,MD,1)+`<line x1="30" y1="140" x2="${B.wri[0]}" y2="${B.wri[1]}" stroke="${STEEL}" stroke-width="3"/>`,
+    tool:(j)=>plate([j.wri[0]-14,j.wri[1]+4],10)},
+  facecpull:{a:{ankle:[86,140],sh:180,th:180,to:184,ua:94,fa:94},b:{ankle:[86,140],sh:180,th:180,to:184,ua:232,fa:118},track:"elb",hl:["ua"],
+    eq:(A,B)=>rect(160,10,8,136,MD,1)+pulley([156,36])+cable([156,36],B.wri)},
+  curl:{a:{ankle:[96,140],sh:180,th:180,to:180,ua:3,fa:4},b:{ankle:[96,140],sh:180,th:180,to:180,ua:3,fa:160},track:"wri",hl:["ua"],tool:(j)=>db(j.wri)},
+  squat:{a:{ankle:[100,140],sh:180,th:180,to:180,ua:330,fa:150},b:{ankle:[100,140],sh:148,th:268,to:140,ua:300,fa:130},track:"sho",hl:["thigh"],
+    eq:()=>"",tool:(j)=>plate([j.sho[0]-2,j.sho[1]-3],12)},
+  rdl:{a:{ankle:[104,140],sh:176,th:180,to:180,ua:0,fa:0},b:{ankle:[104,140],sh:172,th:198,to:102,nk:-15,ua:2,fa:2},track:"wri",hl:["thigh","torso"],
+    eq:()=>"",tool:(j)=>plate(j.wri,12)},
+  legcurl:{a:{hip:[100,98],to:270,nk:0,th:90,sh:90,ua:6,fa:270},b:{hip:[100,98],to:270,th:90,sh:205,ua:6,fa:270},track:"ankle",hl:["thigh"],
+    eq:(A,B)=>rect(48,104,110,7)+rect(60,111,5,35,MD,1)+rect(140,111,5,35,MD,1)+`<circle cx="${B.ankle[0].toFixed(1)}" cy="${(B.ankle[1]+5).toFixed(1)}" r="5.5" fill="${M}"/>`},
+  legext:{a:{hip:[90,104],to:172,th:90,sh:8,ft:95,ua:20,fa:60},b:{hip:[90,104],to:172,th:90,sh:88,ft:180,ua:20,fa:60},track:"ankle",hl:["thigh"],
+    eq:(A,B)=>rect(74,106,46,7)+rect(70,52,7,60)+rect(92,113,5,33,MD,1)+`<circle cx="${(B.ankle[0]+1).toFixed(1)}" cy="${(B.ankle[1]+6).toFixed(1)}" r="5.5" fill="${M}"/>`},
+  core:{a:{hip:[110,136],to:270,nk:0,th:145,sh:40,ft:90,ua:320,fa:60},b:{hip:[110,136],to:235,nk:-15,th:145,sh:40,ua:300,fa:40},track:"sho",hl:["torso"],
+    eq:()=>rect(30,141,150,5,MD,2)},
+};
+function frontPerson(abd, cross, ghost, withDb){
+  const base=ghost?"#6f7a90":"url(#skin)", o=ghost?`opacity=".38"`:"";
+  const cx=100, sy=56;
+  let s=`<g ${o}>`;
+  s+=ln([cx-9,100],[cx-12,140],11,base)+ln([cx+9,100],[cx+12,140],11,base);
+  s+=`<path d="M${cx-20} ${sy-4} Q${cx} ${sy-8} ${cx+20} ${sy-4} L${cx+13} 102 L${cx-13} 102Z" fill="${base}"/>`;
+  s+=ln([cx,sy-8],[cx,sy-12],7,base)+`<circle cx="${cx}" cy="${sy-21}" r="${L.head}" fill="${base}"/>`;
+  [-1,1].forEach(side=>{
+    const sh=[cx+side*19,sy];
+    let el,wr;
+    if(cross){ el=[cx+side*34,sy+6]; wr=[cx+side*5,sy+8]; }
+    else { const a=abd*Math.PI/180; el=[sh[0]+side*Math.sin(a)*L.ua,sh[1]+Math.cos(a)*L.ua]; const b=(abd-(abd>50?0:4))*Math.PI/180; wr=[el[0]+side*Math.sin(b)*L.fa,el[1]+Math.cos(b)*L.fa]; }
+    s+=ln(sh,el,8.5,ghost?base:"url(#hot)")+ln(el,wr,7,base)+`<circle cx="${wr[0].toFixed(1)}" cy="${wr[1].toFixed(1)}" r="3.6" fill="${base}"/>`;
+    if(withDb) s+=db(wr).replace('<g ','<g ');
+    if(side===1) s+=`<!--w${wr[0].toFixed(1)},${wr[1].toFixed(1)}-->`;
+  });
+  return s+"</g>";
+}
 function exerciseIcon(kind) {
-  const common = `xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none" stroke="#e8ecf2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"`;
-  const accent = "#ff4d4f";
-  const icons = {
-    bench: `<svg ${common}>
-      <rect x="8" y="36" width="48" height="6" rx="2" fill="#3a4252" stroke="none"/>
-      <line x1="12" y1="42" x2="12" y2="52"/><line x1="52" y1="42" x2="52" y2="52"/>
-      <circle cx="32" cy="24" r="6" fill="#4a5366" stroke="none"/>
-      <path d="M20 28 L32 30 L44 28" stroke="${accent}"/>
-      <line x1="14" y1="26" x2="50" y2="26" stroke="${accent}" stroke-width="2.5"/>
-      <circle cx="14" cy="26" r="3" fill="${accent}" stroke="none"/>
-      <circle cx="50" cy="26" r="3" fill="${accent}" stroke="none"/>
-    </svg>`,
-    ohp: `<svg ${common}>
-      <circle cx="32" cy="28" r="5" fill="#4a5366" stroke="none"/>
-      <path d="M32 33 L32 48 M24 48 L40 48 M22 38 L26 42 M42 38 L38 42"/>
-      <line x1="18" y1="14" x2="46" y2="14" stroke="${accent}" stroke-width="2.5"/>
-      <circle cx="18" cy="14" r="3" fill="${accent}" stroke="none"/>
-      <circle cx="46" cy="14" r="3" fill="${accent}" stroke="none"/>
-      <path d="M22 22 L18 14 M42 22 L46 14" stroke="${accent}"/>
-    </svg>`,
-    fly: `<svg ${common}>
-      <circle cx="32" cy="26" r="5" fill="#4a5366" stroke="none"/>
-      <path d="M32 31 L32 46 M26 46 L38 46"/>
-      <path d="M18 24 Q32 36 46 24" stroke="${accent}" stroke-width="2.5"/>
-      <circle cx="16" cy="22" r="3" fill="${accent}" stroke="none"/>
-      <circle cx="48" cy="22" r="3" fill="${accent}" stroke="none"/>
-    </svg>`,
-    lateral: `<svg ${common}>
-      <circle cx="32" cy="22" r="5" fill="#4a5366" stroke="none"/>
-      <path d="M32 27 L32 44 M26 44 L38 44"/>
-      <line x1="12" y1="28" x2="24" y2="30" stroke="${accent}"/>
-      <line x1="52" y1="28" x2="40" y2="30" stroke="${accent}"/>
-      <circle cx="10" cy="28" r="3" fill="${accent}" stroke="none"/>
-      <circle cx="54" cy="28" r="3" fill="${accent}" stroke="none"/>
-    </svg>`,
-    pushdown: `<svg ${common}>
-      <path d="M20 8 H44" stroke="#8b95a8"/>
-      <path d="M32 8 V20" stroke="#8b95a8"/>
-      <path d="M24 20 H40" stroke="${accent}" stroke-width="2.5"/>
-      <path d="M26 20 V36 M38 20 V36" stroke="${accent}"/>
-      <path d="M22 36 H42" stroke="${accent}" stroke-width="2.5"/>
-      <circle cx="32" cy="48" r="5" fill="#4a5366" stroke="none"/>
-      <path d="M32 42 V48"/>
-    </svg>`,
-    latpulldown: `<svg ${common}>
-      <path d="M12 10 H52" stroke="#8b95a8"/>
-      <path d="M32 10 V16"/>
-      <line x1="16" y1="16" x2="48" y2="16" stroke="${accent}" stroke-width="2.5"/>
-      <path d="M20 16 L24 34 M44 16 L40 34" stroke="${accent}"/>
-      <circle cx="32" cy="40" r="5" fill="#4a5366" stroke="none"/>
-      <path d="M32 45 V54 M26 54 H38"/>
-    </svg>`,
-    seatedrow: `<svg ${common}>
-      <rect x="8" y="40" width="20" height="8" rx="2" fill="#3a4252" stroke="none"/>
-      <circle cx="36" cy="30" r="5" fill="#4a5366" stroke="none"/>
-      <path d="M36 35 L36 48 M30 48 L42 48"/>
-      <path d="M8 28 H22" stroke="${accent}" stroke-width="2.5"/>
-      <path d="M22 28 L32 32" stroke="${accent}"/>
-      <circle cx="8" cy="28" r="3" fill="${accent}" stroke="none"/>
-    </svg>`,
-    tbar: `<svg ${common}>
-      <path d="M12 48 L52 20" stroke="#8b95a8" stroke-width="3"/>
-      <circle cx="48" cy="22" r="6" fill="${accent}" stroke="none" opacity="0.85"/>
-      <circle cx="40" cy="28" r="5" fill="${accent}" stroke="none" opacity="0.6"/>
-      <circle cx="28" cy="36" r="4" fill="#4a5366" stroke="none"/>
-      <path d="M24 40 L32 34 L38 42" stroke="#e8ecf2"/>
-    </svg>`,
-    facecpull: `<svg ${common}>
-      <circle cx="32" cy="24" r="5" fill="#4a5366" stroke="none"/>
-      <path d="M32 29 L32 46 M26 46 L38 46"/>
-      <path d="M14 20 Q32 28 50 20" stroke="${accent}" stroke-width="2.5"/>
-      <path d="M18 20 L22 28 M46 20 L42 28" stroke="${accent}"/>
-    </svg>`,
-    curl: `<svg ${common}>
-      <circle cx="28" cy="18" r="4" fill="#4a5366" stroke="none"/>
-      <path d="M28 22 L28 36 L36 48"/>
-      <path d="M28 30 Q40 24 44 14" stroke="${accent}" stroke-width="2.5"/>
-      <circle cx="46" cy="12" r="4" fill="${accent}" stroke="none"/>
-    </svg>`,
-    squat: `<svg ${common}>
-      <circle cx="32" cy="14" r="5" fill="#4a5366" stroke="none"/>
-      <path d="M32 19 L32 32"/>
-      <path d="M22 32 L32 32 L42 32" stroke="${accent}"/>
-      <path d="M22 32 L18 48 M42 32 L46 48" stroke="${accent}"/>
-      <path d="M14 48 H22 M42 48 H50"/>
-      <line x1="18" y1="22" x2="46" y2="22" stroke="#8b95a8"/>
-    </svg>`,
-    rdl: `<svg ${common}>
-      <circle cx="38" cy="16" r="5" fill="#4a5366" stroke="none"/>
-      <path d="M38 21 L28 36 L22 50" stroke="${accent}"/>
-      <path d="M28 36 L40 40"/>
-      <line x1="14" y1="42" x2="36" y2="38" stroke="${accent}" stroke-width="2.5"/>
-      <circle cx="14" cy="42" r="3" fill="${accent}" stroke="none"/>
-      <circle cx="36" cy="38" r="3" fill="${accent}" stroke="none"/>
-    </svg>`,
-    legcurl: `<svg ${common}>
-      <path d="M10 28 H40" stroke="#8b95a8"/>
-      <circle cx="22" cy="24" r="4" fill="#4a5366" stroke="none"/>
-      <path d="M26 28 L40 28 L48 18" stroke="${accent}" stroke-width="2.5"/>
-      <circle cx="50" cy="16" r="3" fill="${accent}" stroke="none"/>
-    </svg>`,
-    legext: `<svg ${common}>
-      <rect x="18" y="20" width="22" height="10" rx="2" fill="#3a4252" stroke="none"/>
-      <circle cx="28" cy="16" r="4" fill="#4a5366" stroke="none"/>
-      <path d="M36 30 L48 46" stroke="${accent}" stroke-width="2.5"/>
-      <path d="M44 48 H54" stroke="${accent}"/>
-    </svg>`,
-    core: `<svg ${common}>
-      <circle cx="20" cy="22" r="4" fill="#4a5366" stroke="none"/>
-      <path d="M20 26 L32 30 L50 28" stroke="${accent}" stroke-width="2.5"/>
-      <path d="M32 30 L30 42 M50 28 L52 40"/>
-      <path d="M28 36 H40" stroke="${accent}"/>
-    </svg>`,
-  };
-  return icons[kind] || icons.bench;
+  const P = POSES[kind] || POSES.bench;
+  const defs = `<defs><linearGradient id="skin" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#e4e9f1"/><stop offset="1" stop-color="#a9b3c4"/></linearGradient>
+   <linearGradient id="hot" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff6b5e"/><stop offset="1" stop-color="#d81f26"/></linearGradient>
+   <marker id="ah" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0 0 L10 5 L0 10Z" fill="#ffd166"/></marker></defs>`;
+  let body="";
+  if(P.front){
+    const eq = P.eq?P.eq():"";
+    body = floor+eq+frontPerson(P.a.abd,P.a.cross,true,!!P.tool)+frontPerson(P.b.abd,P.b.cross,false,!!P.tool);
+    const w=(q)=>{ if(q.cross) return [105,64]; const a=q.abd*Math.PI/180; const el=[119+Math.sin(a)*L.ua,56+Math.cos(a)*L.ua]; const b=(q.abd-(q.abd>50?0:4))*Math.PI/180; return [el[0]+Math.sin(b)*L.fa+3,el[1]+Math.cos(b)*L.fa-3]; };
+    body += arrow(w(P.a),w(P.b),P.b.cross?-14:-18);
+  } else {
+    const A=solve(P.a), B=solve(P.b);
+    const eq = P.eq?P.eq(A,B):"";
+    const tool=P.tool||(()=> "");
+    body = floor+eq+`<g opacity=".38">${tool(A)}</g>`+person(A,true)+person(B,false,P.hl)+tool(B);
+    const t=P.track;
+    body += arrow(A[t],B[t],-16);
+  }
+  return `<svg class="exfig" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 150" aria-hidden="true">${defs}<rect width="200" height="150" rx="12" fill="#151922"/>${body}</svg>`;
 }
 
 /* ========== Storage ========== */
@@ -1221,7 +1237,7 @@ function openDetail(exId) {
   $("#modalTitle").textContent = exDef.name;
   $("#modalTips").textContent = exDef.tips;
   $("#modalIcon").innerHTML = exerciseIcon(exDef.icon);
-  $("#modalMuscle").innerHTML = bodySvg(exDef.muscleView, exDef.muscles);
+  $("#modalMuscle").innerHTML = bodySvg(exDef.muscleView, exDef.muscles, exDef.id);
 
   const setsEl = $("#modalSets");
   setsEl.innerHTML = `<h4>记录每组重量 × 次数</h4>`;
