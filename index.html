@@ -527,6 +527,19 @@ body {
   .set-chip { min-width: 70px; }
 }
 
+
+.pf-chip{border:1px solid var(--bg3);color:inherit;font:inherit;cursor:pointer}
+.pf-bmi{display:block;font-size:11px;opacity:.7}
+.pf-mask{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;z-index:9999;padding:16px}
+.pf-mask.on{display:flex}
+.pf-box{background:var(--bg2);border-radius:14px;padding:18px;width:100%;max-width:340px;color:#eee}
+.pf-box h3{margin:0 0 12px}
+.pf-box label{display:block;font-size:13px;margin:10px 0 4px;opacity:.85}
+.pf-box input,.pf-box select{width:100%;box-sizing:border-box;padding:10px;border-radius:8px;border:1px solid #333;background:var(--bg3);color:#fff;font-size:16px}
+.pf-err{color:var(--accent);font-size:13px;min-height:18px;margin-top:8px}
+.pf-act{display:flex;gap:10px;margin-top:10px}
+.pf-act button{flex:1;padding:11px;border-radius:8px;border:0;font-size:15px;cursor:pointer}
+#pfSave{background:var(--accent);color:#fff}#pfCancel{background:var(--bg3);color:#ddd}
 </style>
 </head>
 <body>
@@ -534,7 +547,7 @@ body {
     <header class="header">
       <div class="header-top">
         <h1>增肌打卡</h1>
-        <span class="badge">187cm · 75kg · 新手</span>
+        <button type="button" class="badge pf-chip" id="pfChip" aria-label="编辑身体信息"><span id="pfText">187cm · 75kg · 新手</span> ✏️</button>
       </div>
       <p class="subtitle">一周三练 · 推 / 拉 / 腿 · 数据仅存本机</p>
     </header>
@@ -1420,6 +1433,35 @@ function init() {
 
 init();
 
+</script>
+
+<div class="pf-mask" id="pfMask" role="dialog" aria-modal="true"><div class="pf-box">
+<h3>编辑身体信息</h3>
+<label>身高 (cm，100–250)</label><input id="pfH" type="number" inputmode="decimal" step="0.1">
+<label>体重 (kg，30–250)</label><input id="pfW" type="number" inputmode="decimal" step="0.1">
+<label>训练水平</label><select id="pfLvSel"><option>新手</option><option>进阶</option><option>熟练</option><option value="__c">自定义…</option></select>
+<input id="pfLvCustom" type="text" maxlength="12" placeholder="输入自定义水平" style="display:none;margin-top:8px">
+<div class="pf-err" id="pfErr"></div>
+<div class="pf-act"><button type="button" id="pfCancel">取消</button><button type="button" id="pfSave">保存</button></div>
+</div></div>
+<script>
+(function(){
+var K='workoutProfile_v1',D={h:187,w:75,lv:'新手'},$=function(i){return document.getElementById(i)};
+function load(){try{var p=JSON.parse(localStorage.getItem(K));if(p&&p.h&&p.w&&p.lv)return p}catch(e){}return D}
+function fmt(n){return String(Math.round(n*10)/10)}
+function render(){var p=load(),b=p.w/Math.pow(p.h/100,2);$('pfText').innerHTML=fmt(p.h)+'cm · '+fmt(p.w)+'kg · '+p.lv.replace(/[<>&]/g,'')+'<span class="pf-bmi">BMI '+b.toFixed(1)+'</span>'}
+function open(){var p=load();$('pfH').value=p.h;$('pfW').value=p.w;var std=['新手','进阶','熟练'].indexOf(p.lv)>=0;$('pfLvSel').value=std?p.lv:'__c';$('pfLvCustom').value=std?'':p.lv;$('pfLvCustom').style.display=std?'none':'block';$('pfErr').textContent='';$('pfMask').classList.add('on')}
+function close(){$('pfMask').classList.remove('on')}
+$('pfChip').onclick=open;$('pfCancel').onclick=close;
+$('pfMask').onclick=function(e){if(e.target===this)close()};
+$('pfLvSel').onchange=function(){$('pfLvCustom').style.display=this.value==='__c'?'block':'none'};
+$('pfSave').onclick=function(){var h=parseFloat($('pfH').value),w=parseFloat($('pfW').value),lv=$('pfLvSel').value==='__c'?$('pfLvCustom').value.trim():$('pfLvSel').value;
+if(!(h>=100&&h<=250))return $('pfErr').textContent='身高请填 100–250 cm';
+if(!(w>=30&&w<=250))return $('pfErr').textContent='体重请填 30–250 kg';
+if(!lv)return $('pfErr').textContent='请填写训练水平';
+localStorage.setItem(K,JSON.stringify({h:h,w:w,lv:lv}));render();close()};
+render();
+})();
 </script>
 </body>
 </html>
