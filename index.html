@@ -1,1474 +1,389 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <link rel="apple-touch-icon" href="apple-touch-icon.png" />
-  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png" />
-  <link rel="icon" type="image/png" sizes="48x48" href="favicon-48.png" />
-  <link rel="manifest" href="manifest.webmanifest" />
-  <meta name="apple-mobile-web-app-title" content="增肌打卡" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="mobile-web-app-capable" content="yes" />
-  <meta name="theme-color" content="#0f1115" />
-  <title>增肌打卡 · Haolin</title>
-  <style>
-:root {
-  --bg: #0f1115;
-  --bg2: #171a21;
-  --bg3: #1e232c;
-  --card: #222833;
-  --border: #2e3644;
-  --text: #e8ecf2;
-  --muted: #8b95a8;
-  --accent: #ff4d4f;
-  --accent-dim: rgba(255, 77, 79, 0.18);
-  --green: #3dd68c;
-  --green-dim: rgba(61, 214, 140, 0.15);
-  --blue: #5b8cff;
-  --radius: 14px;
-  --shadow: 0 8px 28px rgba(0, 0, 0, 0.35);
-  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Noto Sans SC",
-    "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-}
-
-* { box-sizing: border-box; margin: 0; padding: 0; }
-
-html, body {
-  background: var(--bg);
-  color: var(--text);
-  min-height: 100%;
-  -webkit-tap-highlight-color: transparent;
-}
-
-body {
-  line-height: 1.5;
-  padding: 0 0 env(safe-area-inset-bottom);
-}
-
-.app {
-  max-width: 520px;
-  margin: 0 auto;
-  padding: 20px 16px 48px;
-}
-
-.header { margin-bottom: 20px; }
-.header-top {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  flex-wrap: wrap;
-}
-.header h1 {
-  font-size: 1.55rem;
-  font-weight: 700;
-  letter-spacing: 0.02em;
-}
-.badge {
-  font-size: 0.72rem;
-  color: var(--muted);
-  background: var(--bg3);
-  border: 1px solid var(--border);
-  padding: 4px 10px;
-  border-radius: 999px;
-}
-.subtitle {
-  margin-top: 6px;
-  color: var(--muted);
-  font-size: 0.88rem;
-}
-
-.day-picker { margin-bottom: 22px; }
-.suggest {
-  font-size: 0.85rem;
-  color: var(--blue);
-  margin-bottom: 12px;
-  min-height: 1.3em;
-}
-.day-btns {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
-}
-.day-btn {
-  background: var(--card);
-  border: 1.5px solid var(--border);
-  border-radius: var(--radius);
-  color: var(--text);
-  padding: 14px 8px;
-  cursor: pointer;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-  transition: border-color 0.15s, background 0.15s, transform 0.1s;
-}
-.day-btn:active { transform: scale(0.97); }
-.day-btn.active {
-  border-color: var(--accent);
-  background: var(--accent-dim);
-  box-shadow: 0 0 0 1px var(--accent);
-}
-.day-emoji { font-size: 1.4rem; }
-.day-name { font-size: 1.15rem; font-weight: 700; }
-.day-desc { font-size: 0.72rem; color: var(--muted); }
-
-.session-bar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 12px;
-}
-.session-bar h2 { font-size: 1.2rem; }
-.link-btn {
-  background: none;
-  border: none;
-  color: var(--blue);
-  font-size: 0.9rem;
-  cursor: pointer;
-  padding: 6px 4px;
-}
-
-.progress-wrap {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 14px;
-}
-.progress-bar {
-  flex: 1;
-  height: 8px;
-  background: var(--bg3);
-  border-radius: 999px;
-  overflow: hidden;
-}
-.progress-fill {
-  height: 100%;
-  width: 0%;
-  background: linear-gradient(90deg, var(--accent), #ff7a45);
-  border-radius: 999px;
-  transition: width 0.25s ease;
-}
-.progress-text {
-  font-size: 0.78rem;
-  color: var(--muted);
-  white-space: nowrap;
-}
-
-.note-row {
-  margin-bottom: 16px;
-}
-.note-row label {
-  display: block;
-  font-size: 0.78rem;
-  color: var(--muted);
-  margin-bottom: 6px;
-}
-.note-row input {
-  width: 100%;
-  background: var(--bg2);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  color: var(--text);
-  padding: 10px 12px;
-  font-size: 0.95rem;
-  outline: none;
-}
-.note-row input:focus { border-color: var(--blue); }
-
-.exercise-list {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.ex-card {
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 14px;
-  box-shadow: var(--shadow);
-}
-.ex-card.done {
-  border-color: rgba(61, 214, 140, 0.45);
-  background: linear-gradient(180deg, var(--green-dim), var(--card));
-}
-.ex-head {
-  display: flex;
-  gap: 12px;
-  align-items: flex-start;
-}
-.ex-thumb {
-  width: 76px;
-  height: 56px;
-  flex-shrink: 0;
-  background: var(--bg2);
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
-  border: 1px solid var(--border);
-}
-.ex-thumb svg { width: 72px; height: 54px; display:block; }
-.ex-meta { flex: 1; min-width: 0; }
-.ex-name {
-  font-size: 1.02rem;
-  font-weight: 650;
-  margin-bottom: 2px;
-}
-.ex-reps {
-  font-size: 0.78rem;
-  color: var(--muted);
-}
-.ex-muscles {
-  font-size: 0.72rem;
-  color: var(--accent);
-  margin-top: 4px;
-}
-.btn-detail {
-  flex-shrink: 0;
-  background: var(--bg3);
-  border: 1px solid var(--border);
-  color: var(--text);
-  border-radius: 10px;
-  padding: 8px 10px;
-  font-size: 0.78rem;
-  cursor: pointer;
-  white-space: nowrap;
-}
-.btn-detail:active { opacity: 0.85; }
-
-.sets-row {
-  display: flex;
-  gap: 8px;
-  margin-top: 12px;
-  flex-wrap: wrap;
-}
-.set-chip {
-  flex: 1;
-  min-width: 88px;
-  background: var(--bg2);
-  border: 1.5px solid var(--border);
-  border-radius: 12px;
-  padding: 10px 8px;
-  cursor: pointer;
-  text-align: center;
-  transition: all 0.15s;
-  color: var(--muted);
-  font-size: 0.82rem;
-  user-select: none;
-}
-.set-chip strong {
-  display: block;
-  font-size: 0.95rem;
-  color: var(--text);
-  margin-bottom: 2px;
-}
-.set-chip.checked {
-  border-color: var(--green);
-  background: var(--green-dim);
-  color: var(--green);
-}
-.set-chip.checked strong { color: var(--green); }
-
-.set-inputs {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
-  margin-top: 10px;
-}
-.set-inputs .field {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-.set-inputs label {
-  font-size: 0.7rem;
-  color: var(--muted);
-}
-.set-inputs input {
-  background: var(--bg2);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  color: var(--text);
-  padding: 8px 10px;
-  font-size: 0.9rem;
-  width: 100%;
-  outline: none;
-}
-.set-inputs input:focus { border-color: var(--blue); }
-
-.session-actions {
-  margin-top: 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-.btn-primary {
-  width: 100%;
-  background: linear-gradient(135deg, #ff4d4f, #ff7a45);
-  border: none;
-  color: #fff;
-  font-weight: 700;
-  font-size: 1rem;
-  padding: 14px;
-  border-radius: 12px;
-  cursor: pointer;
-  box-shadow: 0 6px 20px rgba(255, 77, 79, 0.3);
-}
-.btn-primary:active { opacity: 0.9; }
-.btn-ghost {
-  width: 100%;
-  background: transparent;
-  border: 1px solid var(--border);
-  color: var(--muted);
-  padding: 12px;
-  border-radius: 12px;
-  cursor: pointer;
-  font-size: 0.9rem;
-}
-
-.history-list {
-  list-style: none;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-.history-item {
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 12px 14px;
-}
-.history-item .hi-top {
-  display: flex;
-  justify-content: space-between;
-  gap: 8px;
-  margin-bottom: 4px;
-}
-.history-item .hi-day {
-  font-weight: 650;
-}
-.history-item .hi-date {
-  font-size: 0.78rem;
-  color: var(--muted);
-}
-.history-item .hi-stats {
-  font-size: 0.82rem;
-  color: var(--muted);
-}
-.history-item .hi-note {
-  margin-top: 6px;
-  font-size: 0.82rem;
-  color: var(--text);
-}
-.empty-hint {
-  color: var(--muted);
-  font-size: 0.9rem;
-  text-align: center;
-  padding: 28px 12px;
-}
-
-.footer {
-  margin-top: 28px;
-  text-align: center;
-  color: var(--muted);
-  font-size: 0.75rem;
-}
-
-/* Modal */
-.modal {
-  position: fixed;
-  inset: 0;
-  z-index: 100;
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-}
-.modal[hidden] { display: none; }
-.modal-backdrop {
-  position: absolute;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.65);
-}
-.modal-sheet {
-  position: relative;
-  width: 100%;
-  max-width: 520px;
-  max-height: 92vh;
-  overflow-y: auto;
-  background: var(--bg2);
-  border-radius: 20px 20px 0 0;
-  padding: 20px 16px 32px;
-  border: 1px solid var(--border);
-  border-bottom: none;
-  animation: slideUp 0.22s ease;
-}
-@keyframes slideUp {
-  from { transform: translateY(40px); opacity: 0; }
-  to { transform: translateY(0); opacity: 1; }
-}
-.modal-close {
-  position: absolute;
-  top: 12px;
-  right: 14px;
-  width: 36px;
-  height: 36px;
-  border: none;
-  background: var(--bg3);
-  color: var(--text);
-  border-radius: 50%;
-  font-size: 1.4rem;
-  line-height: 1;
-  cursor: pointer;
-}
-.modal-sheet h3 {
-  font-size: 1.2rem;
-  padding-right: 40px;
-  margin-bottom: 6px;
-}
-.modal-tips {
-  font-size: 0.88rem;
-  color: var(--muted);
-  margin-bottom: 16px;
-}
-.modal-visuals {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-  margin-bottom: 16px;
-}
-.visual-card {
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 10px;
-  text-align: center;
-}
-.visual-label {
-  font-size: 0.72rem;
-  color: var(--muted);
-  margin-bottom: 8px;
-}
-.red-dot { color: var(--accent); }
-.icon-box, .muscle-box {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 140px;
-}
-.modal-visuals { grid-template-columns: 1fr !important; display: grid; gap: 10px; }
-.icon-box svg, .muscle-box svg {
-  width: 100%;
-  max-width: 340px;
-  height: auto;
-}
-
-.sets-log h4 {
-  font-size: 0.9rem;
-  margin-bottom: 10px;
-}
-.log-set {
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 10px;
-  margin-bottom: 8px;
-}
-.log-set-top {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 8px;
-}
-.log-set-top label {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  cursor: pointer;
-  font-size: 0.9rem;
-}
-.log-set-top input[type="checkbox"] {
-  width: 18px;
-  height: 18px;
-  accent-color: var(--green);
-}
-.log-fields {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
-}
-.log-fields input {
-  background: var(--bg2);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  color: var(--text);
-  padding: 8px 10px;
-  font-size: 0.88rem;
-  width: 100%;
-  outline: none;
-}
-.log-fields input:focus { border-color: var(--blue); }
-.log-fields label {
-  font-size: 0.68rem;
-  color: var(--muted);
-  display: block;
-  margin-bottom: 3px;
-}
-
-@media (min-width: 600px) {
-  .modal {
-    align-items: center;
-  }
-  .modal-sheet {
-    border-radius: 20px;
-    border-bottom: 1px solid var(--border);
-    max-height: 85vh;
-  }
-}
-
-@media (max-width: 360px) {
-  .modal-visuals { grid-template-columns: 1fr; }
-  .set-chip { min-width: 70px; }
-}
-
-
-.pf-chip{border:1px solid var(--bg3);color:inherit;font:inherit;cursor:pointer}
-.pf-bmi{display:block;font-size:11px;opacity:.7}
-.pf-mask{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;z-index:9999;padding:16px}
-.pf-mask.on{display:flex}
-.pf-box{background:var(--bg2);border-radius:14px;padding:18px;width:100%;max-width:340px;color:#eee}
-.pf-box h3{margin:0 0 12px}
-.pf-box label{display:block;font-size:13px;margin:10px 0 4px;opacity:.85}
-.pf-box input,.pf-box select{width:100%;box-sizing:border-box;padding:10px;border-radius:8px;border:1px solid #333;background:var(--bg3);color:#fff;font-size:16px}
-.pf-err{color:var(--accent);font-size:13px;min-height:18px;margin-top:8px}
-.pf-act{display:flex;gap:10px;margin-top:10px}
-.pf-act button{flex:1;padding:11px;border-radius:8px;border:0;font-size:15px;cursor:pointer}
-#pfSave{background:var(--accent);color:#fff}#pfCancel{background:var(--bg3);color:#ddd}
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<link rel="apple-touch-icon" href="apple-touch-icon.png" />
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png" />
+<link rel="icon" type="image/png" sizes="48x48" href="favicon-48.png" />
+<link rel="manifest" href="manifest.webmanifest" />
+<meta name="apple-mobile-web-app-title" content="增肌打卡" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="theme-color" content="#FFF8E8" />
+<title>增肌打卡 · Haolin</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;background:#FFF8E8;font-family:"PingFang SC","Hiragino Sans GB","Noto Sans CJK SC","Microsoft YaHei",sans-serif;color:#5a3a3a}
+.wrap{max-width:480px;margin:0 auto;padding:calc(18px + env(safe-area-inset-top)) 16px calc(30px + env(safe-area-inset-bottom));position:relative}
+button{font-family:inherit;cursor:pointer}
+h1{font-size:40px;margin:14px 0 8px;color:#F27C97;letter-spacing:2px;text-shadow:3px 3px 0 #fff,-2px -2px 0 #fff;font-weight:900}
+.bearbtn{position:absolute;right:12px;top:calc(8px + env(safe-area-inset-top));width:112px;height:112px;display:flex;align-items:center;justify-content:center;background:none;border:0;padding:0}
+.bearbtn img{width:104px}
+.chip{display:inline-block;background:#EAF4FF;border:2px solid #A9CDF0;border-radius:20px;padding:6px 12px;font-size:13px;font-weight:700;color:#5a3a3a}
+.pf-bmi{margin-left:8px}
+.suggest{font-size:12px;color:#a07070;margin-top:8px;min-height:16px}
+.tabs{display:flex;gap:10px;margin:14px 0 14px}.tab{flex:1;text-align:center;padding:10px;border-radius:22px;font-size:20px;font-weight:900;background:#DCEBFB;border:2px solid #A9CDF0;color:#5a3a3a}
+.tab.on{background:#FFD3DD;border-color:#F27C97;color:#d4506f}
+.prog{border:2px solid #9ED9C0;border-radius:18px;background:#fff;height:30px;position:relative;overflow:hidden;margin-bottom:16px}
+.prog i{position:absolute;left:0;top:0;bottom:0;width:0;background:#A8E4CC;transition:width .3s}.prog span{position:absolute;width:100%;text-align:center;line-height:26px;font-size:14px;font-weight:700}
+.card{background:#FFEFF3;border:2.5px solid #F5B5C5;border-radius:24px;padding:12px;margin-bottom:14px;box-shadow:0 3px 0 #F5C9D4}
+.card:nth-child(even){background:#EEF6FF;border-color:#B5D3F2;box-shadow:0 3px 0 #C9DEF5}
+.card h3{margin:2px 4px 10px;font-size:19px}.card h3 small{font-size:14px;color:#a07070;margin-left:6px}
+.row{display:flex;gap:10px}.img{width:118px;height:118px;flex:none;border-radius:18px;overflow:hidden;border:2px solid #fff;padding:0;background:#fff}
+.img img{width:100%;height:100%;display:block}
+.sets{flex:1;background:#fff;border-radius:16px;padding:8px;display:flex;flex-direction:column;justify-content:space-around;gap:4px;min-width:0}
+.set{display:flex;align-items:center;gap:4px;white-space:nowrap;font-size:13px;font-weight:700}
+.ck{width:24px;height:24px;border-radius:50%;border:2px solid #F27C97;flex:none;display:flex;align-items:center;justify-content:center;font-size:13px;background:#fff;color:#fff;padding:0}
+.ck.on{background:#F27C97}
+.in{width:40px;height:26px;border:1.5px dashed #C9B3B3;border-radius:8px;text-align:center;font-size:13px;color:#5a3a3a;background:#fff;padding:0;font-family:inherit;font-weight:700}
+.in:not(:placeholder-shown){border:1.5px solid #F27C97;background:#FFF5F7}
+.in:focus{outline:none;border-color:#F27C97}
+.btn{display:block;width:100%;margin-top:8px;background:#7FD3B0;border:3px solid #fff;box-shadow:0 0 0 2.5px #5DBB95;border-radius:30px;text-align:center;color:#fff;font-size:24px;font-weight:900;padding:14px}
+.modal{position:fixed;inset:0;background:rgba(90,58,58,.45);display:none;align-items:center;justify-content:center;z-index:50;padding:16px}
+.modal.on{display:flex}.box{width:100%;max-width:340px;background:#FFF8E8;border:3px solid #F5B5C5;border-radius:28px;padding:16px;position:relative;text-align:center}
+.box h3{margin:4px 30px 10px;font-size:20px}
+.box>img{width:100%;border-radius:18px;display:block}.x{position:absolute;right:12px;top:10px;width:32px;height:32px;border-radius:50%;background:#FFD3DD;font-size:20px;line-height:32px;font-weight:900;color:#d4506f;border:0;padding:0}
+.lg{display:flex;justify-content:center;gap:20px;font-size:15px;font-weight:700;margin-top:10px}.lg i{display:inline-block;width:16px;height:16px;border-radius:5px;vertical-align:-2px;margin-right:5px}
+.form{text-align:left}.form label{display:block;font-size:13px;font-weight:700;margin:10px 0 4px}
+.form input,.form select{width:100%;height:40px;border:2px solid #F5B5C5;border-radius:12px;padding:0 10px;font-size:16px;background:#fff;color:#5a3a3a;font-family:inherit}
+.err{color:#d4506f;font-size:13px;min-height:18px;margin-top:6px}
+.act{display:flex;gap:10px;margin-top:8px}.act button{flex:1;height:42px;border-radius:21px;font-size:16px;font-weight:900;border:2px solid #F5B5C5;background:#fff;color:#d4506f}
+.act button.pri{background:#F27C97;border-color:#F27C97;color:#fff}
+.toast{position:fixed;left:50%;bottom:40px;transform:translateX(-50%);background:#5a3a3a;color:#fff;padding:10px 16px;border-radius:20px;font-size:14px;display:none;z-index:60;max-width:90%;text-align:center}
+/* history */
+#hist{display:none}.histmode #main{display:none}.histmode #hist{display:block}
+.top{display:flex;align-items:center;gap:10px}
+.back{width:40px;height:40px;border-radius:50%;background:#fff;border:2px solid #F5B5C5;font-size:22px;font-weight:900;color:#d4506f;display:flex;align-items:center;justify-content:center;padding:0}
+.top h1{flex:1;font-size:30px;margin:0}
+.hb{width:78px;height:78px;display:flex;align-items:center;justify-content:center}.hb img{width:72px}
+.chips{display:flex;gap:8px;margin:16px 0}.chips .c{flex:1;background:#fff;border:2px solid #A9CDF0;border-radius:16px;padding:8px 4px;text-align:center}
+.chips b{display:block;font-size:20px}.chips span{font-size:11px;color:#a07070}
+.chips .c:nth-child(2){border-color:#F5B5C5}.chips .c:nth-child(3){border-color:#9ED9C0}
+.panel{background:#fff;border:2.5px solid #F5B5C5;border-radius:24px;padding:14px;margin-bottom:14px;box-shadow:0 3px 0 #F5C9D4}
+.ph{display:flex;align-items:center;justify-content:space-between}.ph h3{margin:0;font-size:18px}
+.tg{display:flex;background:#FFEFF3;border-radius:14px;padding:3px}.tg button{font-size:12px;padding:3px 9px;border-radius:11px;font-weight:700;border:0;background:none;color:#5a3a3a}.tg .on{background:#F27C97;color:#fff}
+.addw{display:block;width:100%;margin-top:10px;text-align:center;background:#EEF6FF;border:2px dashed #A9CDF0;border-radius:16px;padding:8px;font-weight:900;color:#4b85c0;font-size:15px}
+.empty{text-align:center;color:#a07070;font-size:13px;padding:18px 6px}
+.strip{display:flex;justify-content:space-between;margin-top:6px}.d{text-align:center;font-size:11px;color:#a07070}.d i{display:block;width:30px;height:30px;border-radius:50%;margin:3px auto 0;line-height:30px;font-style:normal;font-size:13px;font-weight:900;background:#F3EDE4;color:#c9b3b3}
+.d .push{background:#FFD3DD;color:#d4506f}.d .pull{background:#DCEBFB;color:#4b85c0}.d .legs{background:#CFF0E2;color:#3d9a74}
+h2{font-size:18px;margin:18px 4px 10px}
+.s{background:#fff;border:2.5px solid #EADFD3;border-radius:20px;padding:12px;margin-bottom:10px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;cursor:pointer}
+.pill{font-weight:900;font-size:16px;width:38px;height:38px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex:none}
+.pill.push{background:#FFD3DD;color:#d4506f}.pill.pull{background:#DCEBFB;color:#4b85c0}.pill.legs{background:#CFF0E2;color:#3d9a74}
+.s .m{flex:1;min-width:0}.s .m b{font-size:15px}.s .m div{font-size:12px;color:#a07070;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.cnt{font-weight:900;font-size:15px}.cnt small{font-size:11px;color:#a07070}
+.s.exp{border-color:#F5B5C5}.det{width:100%;border-top:2px dashed #F5D3DC;margin-top:4px;padding-top:8px;display:none}.s.exp .det{display:block}
+.e{display:flex;align-items:center;gap:10px;padding:4px 0}.e img{width:48px;height:48px;border-radius:12px;border:2px solid #FFE3EA;flex:none}.e b{font-size:14px;width:76px;flex:none}.e span{display:inline-block;font-size:12px;background:#FFF5F7;border-radius:8px;padding:2px 6px;margin:1px 3px 1px 0}
+.note{font-size:12px;color:#a07070;margin-top:4px}
 </style>
 </head>
 <body>
-  <div class="app">
-    <header class="header">
-      <div class="header-top">
-        <h1>增肌打卡</h1>
-        <button type="button" class="badge pf-chip" id="pfChip" aria-label="编辑身体信息"><span id="pfText">187cm · 75kg · 新手</span> ✏️</button>
-      </div>
-      <p class="subtitle">一周三练 · 推 / 拉 / 腿 · 数据仅存本机</p>
-    </header>
-
-    <section class="day-picker" aria-label="选择训练日">
-      <p class="suggest" id="suggestText"></p>
-      <div class="day-btns">
-        <button type="button" class="day-btn" data-day="push" id="btn-push">
-          <span class="day-emoji">💥</span>
-          <span class="day-name">推</span>
-          <span class="day-desc">胸肩三头</span>
-        </button>
-        <button type="button" class="day-btn" data-day="pull" id="btn-pull">
-          <span class="day-emoji">🧲</span>
-          <span class="day-name">拉</span>
-          <span class="day-desc">背二头</span>
-        </button>
-        <button type="button" class="day-btn" data-day="legs" id="btn-legs">
-          <span class="day-emoji">🦵</span>
-          <span class="day-name">腿</span>
-          <span class="day-desc">臀腿核心</span>
-        </button>
-      </div>
-    </section>
-
-    <section class="session" id="sessionPanel" hidden>
-      <div class="session-bar">
-        <h2 id="sessionTitle"></h2>
-        <button type="button" class="link-btn" id="btnHistory">历史</button>
-      </div>
-      <div class="progress-wrap">
-        <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
-        <span class="progress-text" id="progressText">0 / 0 组</span>
-      </div>
-      <div class="note-row">
-        <label for="sessionNote">今日备注</label>
-        <input type="text" id="sessionNote" placeholder="例如：状态不错 / 卧推加片…" maxlength="80" />
-      </div>
-      <div id="exerciseList" class="exercise-list"></div>
-      <div class="session-actions">
-        <button type="button" class="btn-primary" id="btnComplete">完成本次训练</button>
-        <button type="button" class="btn-ghost" id="btnResetDay">清空今日勾选</button>
-      </div>
-    </section>
-
-    <section class="history-panel" id="historyPanel" hidden>
-      <div class="session-bar">
-        <h2>训练历史</h2>
-        <button type="button" class="link-btn" id="btnBackSession">返回</button>
-      </div>
-      <ul id="historyList" class="history-list"></ul>
-      <p class="empty-hint" id="historyEmpty" hidden>还没有记录，完成一次训练后会出现在这里。</p>
-    </section>
-
-    <footer class="footer">
-      <p>组间休息 90–120 秒 · 能轻松做满上限次数就下周加一点重量</p>
-    </footer>
+<div class="wrap" id="main">
+  <button class="bearbtn" id="bearBtn" aria-label="历史打卡"><img src="assets/bear.webp" alt="小熊"></button>
+  <h1>增肌打卡</h1>
+  <button class="chip" id="pfChip" type="button"><span id="pfText"></span></button>
+  <div class="suggest" id="suggest"></div>
+  <div class="tabs" id="tabs">
+    <button class="tab" data-day="push">推</button><button class="tab" data-day="pull">拉</button><button class="tab" data-day="legs">腿</button>
   </div>
+  <div class="prog"><i id="progBar"></i><span id="progText">今日进度 0/15 组</span></div>
+  <div id="cards"></div>
+  <button class="btn" id="doneBtn">完成今天训练！</button>
+</div>
 
-  <!-- 动作详情弹层 -->
-  <div class="modal" id="detailModal" hidden>
-    <div class="modal-backdrop" data-close></div>
-    <div class="modal-sheet" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
-      <button type="button" class="modal-close" data-close aria-label="关闭">×</button>
-      <h3 id="modalTitle"></h3>
-      <p class="modal-tips" id="modalTips"></p>
-      <div class="modal-visuals">
-        <div class="visual-card">
-          <p class="visual-label">动作示意</p>
-          <div class="icon-box" id="modalIcon"></div>
-        </div>
-        <div class="visual-card">
-          <p class="visual-label">发力肌群 <span class="red-dot">●</span></p>
-          <div class="muscle-box" id="modalMuscle"></div>
-        </div>
-      </div>
-      <div class="sets-log" id="modalSets"></div>
-    </div>
-  </div>
+<div class="wrap" id="hist">
+  <div class="top"><button class="back" id="backBtn" aria-label="返回">‹</button><h1>历史打卡</h1><div class="hb"><img src="assets/bear.webp" alt=""></div></div>
+  <div class="chips"><div class="c"><b id="stSess">0</b><span>累计训练</span></div><div class="c"><b id="stSets">0</b><span>完成组数</span></div><div class="c"><b id="stW">—</b><span>体重变化</span></div></div>
+  <div class="panel"><div class="ph"><h3>体重变化</h3><div class="tg" id="wRange"><button data-r="7">7天</button><button data-r="30" class="on">30天</button><button data-r="all">全部</button></div></div>
+    <div id="chart"></div>
+    <button class="addw" id="addW">＋ 记录体重</button></div>
+  <div class="panel" style="border-color:#B5D3F2;box-shadow:0 3px 0 #C9DEF5"><div class="ph"><h3>训练日</h3><span style="font-size:12px;color:#a07070" id="stripRange"></span></div>
+    <div class="strip" id="strip"></div></div>
+  <h2>训练记录</h2><div id="sessions"></div>
+</div>
 
-  <script>
-/**
- * 增肌打卡 · Haolin
- * 本机 localStorage，无后端
- */
+<div class="modal" id="musModal"><div class="box"><button class="x" data-close>×</button><h3 id="musTitle"></h3><img id="musImg" alt="发力肌群">
+  <div class="lg"><span><i style="background:#E8504F"></i>主要</span><span><i style="background:#F8A866"></i>次要</span></div></div></div>
 
-const STORAGE_KEY = "haolin_workout_v1";
-const DAY_LABELS = { push: "推（胸肩三头）", pull: "拉（背二头）", legs: "腿（臀腿核心）" };
-const DAY_SHORT = { push: "推", pull: "拉", legs: "腿" };
-const NEXT_DAY = { push: "pull", pull: "legs", legs: "push" };
+<div class="modal" id="pfMask" role="dialog" aria-modal="true"><div class="box form">
+  <h3>编辑身体信息</h3>
+  <label>身高 (cm，100–250)</label><input id="pfH" type="number" inputmode="decimal" step="0.1">
+  <label>体重 (kg，30–250)</label><input id="pfW" type="number" inputmode="decimal" step="0.1">
+  <label>训练水平</label><select id="pfLvSel"><option>新手</option><option>进阶</option><option>熟练</option><option value="__c">自定义…</option></select>
+  <input id="pfLvCustom" type="text" maxlength="12" placeholder="输入自定义水平" style="display:none;margin-top:8px">
+  <div class="err" id="pfErr"></div>
+  <div class="act"><button type="button" id="pfCancel">取消</button><button type="button" class="pri" id="pfSave">保存</button></div>
+</div></div>
 
-const PLAN = {
-  push: [
-    {
-      id: "bench",
-      name: "杠铃卧推",
-      sets: 3,
-      reps: "8–10",
-      muscles: ["chest", "front_delt", "triceps"],
-      muscleView: "front",
-      tips: "躺平脚踩稳，肩胛收紧。杠落到胸口中下部，肘约 45°，推起别锁死肘。",
-      icon: "bench",
-    },
-    {
-      id: "ohp",
-      name: "哑铃肩推",
-      sets: 3,
-      reps: "8–10",
-      muscles: ["front_delt", "side_delt", "triceps"],
-      muscleView: "front",
-      tips: "坐姿靠背，核心收紧。哑铃从耳侧推到头顶略前方，不要耸肩。",
-      icon: "ohp",
-    },
-    {
-      id: "fly",
-      name: "器械夹胸",
-      sets: 3,
-      reps: "10–12",
-      muscles: ["chest"],
-      muscleView: "front",
-      tips: "挺胸，手臂微屈固定，像抱树一样夹到中间，停半秒再慢慢打开。",
-      icon: "fly",
-    },
-    {
-      id: "lateral",
-      name: "侧平举",
-      sets: 3,
-      reps: "12–15",
-      muscles: ["side_delt"],
-      muscleView: "front",
-      tips: "微屈肘抬到接近肩高，掌心略朝下，顶峰停一下；重量宁轻勿晃。",
-      icon: "lateral",
-    },
-    {
-      id: "pushdown",
-      name: "绳索下压",
-      sets: 3,
-      reps: "10–12",
-      muscles: ["triceps"],
-      muscleView: "front",
-      tips: "肘贴身，只动前臂下压到大腿前，顶峰挤三头，控速回。",
-      icon: "pushdown",
-    },
-  ],
-  pull: [
-    {
-      id: "latpulldown",
-      name: "高位下拉",
-      sets: 3,
-      reps: "8–10",
-      muscles: ["lats", "biceps", "rear_delt"],
-      muscleView: "back",
-      tips: "宽握坐稳。先沉肩胛再拉到锁骨附近，肘朝下后方，胸挺起。",
-      icon: "latpulldown",
-    },
-    {
-      id: "seatedrow",
-      name: "坐姿划船",
-      sets: 3,
-      reps: "8–10",
-      muscles: ["midback", "lats", "biceps"],
-      muscleView: "back",
-      tips: "躯干直立，拉到肚脐附近，肩胛夹紧；回程伸直但不松垮圆背。",
-      icon: "seatedrow",
-    },
-    {
-      id: "tbar",
-      name: "胸托 T 杠划船",
-      sets: 3,
-      reps: "8–10",
-      muscles: ["midback", "lats", "rear_delt"],
-      muscleView: "back",
-      tips: "胸口贴垫，中立握。肩胛先沉，拉向腹部两侧，肘往后夹，别砸反弹。",
-      icon: "tbar",
-    },
-    {
-      id: "facecpull",
-      name: "面拉",
-      sets: 3,
-      reps: "12–15",
-      muscles: ["rear_delt", "midback"],
-      muscleView: "back",
-      tips: "绳索中高位，拉向脸前，肘外展与肩同高，像要把绳子撕开。",
-      icon: "facecpull",
-    },
-    {
-      id: "curl",
-      name: "哑铃弯举",
-      sets: 3,
-      reps: "10–12",
-      muscles: ["biceps"],
-      muscleView: "front",
-      tips: "肘贴身固定，只动前臂弯起；下放慢，别借腰晃。",
-      icon: "curl",
-    },
-  ],
-  legs: [
-    {
-      id: "squat",
-      name: "深蹲或腿举",
-      sets: 3,
-      reps: "8–10",
-      muscles: ["quads", "glutes"],
-      muscleView: "front",
-      tips: "脚与肩同宽，膝指向脚尖，蹲到大腿约平行。腿举时腰贴靠背别拱。",
-      icon: "squat",
-    },
-    {
-      id: "rdl",
-      name: "罗马尼亚硬拉",
-      sets: 3,
-      reps: "8–10",
-      muscles: ["hamstrings", "glutes", "lowerback"],
-      muscleView: "back",
-      tips: "微屈膝，髋往后折，杠贴腿下滑，背保持平直，感受腘绳肌拉伸。",
-      icon: "rdl",
-    },
-    {
-      id: "legcurl",
-      name: "腿弯举",
-      sets: 3,
-      reps: "10–12",
-      muscles: ["hamstrings"],
-      muscleView: "back",
-      tips: "趴姿或坐姿，把垫子弯向臀部，顶峰挤一下，下放控速。",
-      icon: "legcurl",
-    },
-    {
-      id: "legext",
-      name: "腿伸展",
-      sets: 3,
-      reps: "10–12",
-      muscles: ["quads"],
-      muscleView: "front",
-      tips: "坐稳，伸直到接近锁膝但别猛弹，顶峰停半秒再慢慢回。",
-      icon: "legext",
-    },
-    {
-      id: "core",
-      name: "卷腹或平板支撑",
-      sets: 3,
-      reps: "10–15 / 30–45秒",
-      muscles: ["abs"],
-      muscleView: "front",
-      tips: "卷腹下巴微收，用腹肌卷起；平板肘撑，身体一条直线，别塌腰。",
-      icon: "core",
-    },
-  ],
+<div class="modal" id="wModal"><div class="box form">
+  <h3>记录体重</h3>
+  <label>日期</label><input id="wDate" type="date">
+  <label>体重 (kg)</label><input id="wKg" type="number" inputmode="decimal" step="0.1">
+  <div class="err" id="wErr"></div>
+  <div class="act"><button type="button" data-close>取消</button><button type="button" class="pri" id="wSave">保存</button></div>
+</div></div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* 增肌打卡 · Haolin — 本机 localStorage，无后端 */
+var STORAGE_KEY = "haolin_workout_v1";   // 训练数据（沿用旧格式）
+var PROFILE_KEY = "workoutProfile_v1";   // 身体信息
+var WEIGHT_KEY = "weightLog_v1";         // 体重记录 [{date,kg}]
+var DAY_SHORT = { push: "推", pull: "拉", legs: "腿" };
+var NEXT_DAY = { push: "pull", pull: "legs", legs: "push" };
+var A = "assets/";
+function ex(id, name, sets, reps, img, mus) { return { id: id, name: name, sets: sets, reps: reps, img: img, mus: mus || img }; }
+var PLAN = {
+  push: [ex("bench","杠铃卧推",3,"8–10","push-01-bench"), ex("ohp","哑铃肩推",3,"8–10","push-02-shoulder-press"), ex("fly","器械夹胸",3,"10–12","push-03-chest-fly"), ex("lateral","侧平举",3,"12–15","push-04-lateral-raise"), ex("pushdown","绳索下压",3,"10–12","push-05-pushdown")],
+  pull: [ex("latpulldown","高位下拉",3,"8–10","pull-01-lat-pulldown"), ex("seatedrow","坐姿划船",3,"8–10","pull-02-seated-row"), ex("tbar","胸托T杠划船",3,"8–10","pull-03-tbar-row","pull-02-seated-row"), ex("facecpull","面拉",3,"12–15","pull-04-face-pull"), ex("curl","哑铃弯举",3,"10–12","pull-05-curl")],
+  legs: [ex("squat","深蹲/腿举",3,"8–10","legs-01-squat"), ex("rdl","罗马尼亚硬拉",3,"8–10","legs-02-rdl"), ex("legcurl","腿弯举",3,"10–12","legs-03-leg-curl"), ex("legext","腿伸展",3,"10–12","legs-04-leg-extension"), ex("core","卷腹",3,"15–20","legs-05-crunch")]
 };
+var EX_BY_ID = {}; Object.keys(PLAN).forEach(function (d) { PLAN[d].forEach(function (e) { EX_BY_ID[e.id] = e; }); });
 
-const MUSCLE_NAMES = {
-  chest: "胸大肌",
-  front_delt: "前三角",
-  side_delt: "侧三角",
-  rear_delt: "后三角",
-  triceps: "肱三头",
-  biceps: "肱二头",
-  lats: "背阔肌",
-  midback: "中上背",
-  lowerback: "竖脊肌",
-  quads: "股四头",
-  hamstrings: "腘绳肌",
-  glutes: "臀大肌",
-  abs: "腹直肌",
-};
+function $(id) { return document.getElementById(id); }
+function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
+function pad(n) { return String(n).padStart(2, "0"); }
+function dateKey(d) { return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate()); }
+function todayKey() { return dateKey(new Date()); }
+function md(k) { var p = String(k).split("-"); return +p[1] + "/" + +p[2]; }
+function toast(t) { var el = $("toast"); el.textContent = t; el.style.display = "block"; clearTimeout(toast.t); toast.t = setTimeout(function () { el.style.display = "none"; }, 2600); }
 
-/* ========== 肌群图：正面 + 背面解剖 ========== */
-const MUSCLE_MAP = {
-  bench:{p:["chest"],s:["front_delt","triceps"]},
-  ohp:{p:["front_delt","side_delt"],s:["triceps","traps"]},
-  fly:{p:["chest"],s:["front_delt","biceps"]},
-  lateral:{p:["side_delt"],s:["front_delt","traps"]},
-  pushdown:{p:["triceps"],s:["forearms"]},
-  latpulldown:{p:["lats"],s:["biceps","rear_delt","midback","forearms"]},
-  seatedrow:{p:["midback","lats"],s:["biceps","rear_delt","traps","forearms"]},
-  tbar:{p:["midback","lats"],s:["rear_delt","biceps","traps","forearms"]},
-  facecpull:{p:["rear_delt","midback"],s:["traps","side_delt"]},
-  curl:{p:["biceps"],s:["forearms"]},
-  squat:{p:["quads","glutes"],s:["hamstrings","lowerback","calves"]},
-  rdl:{p:["hamstrings","glutes"],s:["lowerback","forearms","traps"]},
-  legcurl:{p:["hamstrings"],s:["calves"]},
-  legext:{p:["quads"],s:[]},
-  core:{p:["abs"],s:["obliques"]},
-};
-Object.assign(MUSCLE_NAMES,{forearms:"前臂",obliques:"腹斜肌",traps:"斜方肌",calves:"小腿",midback:"菱形肌/中背"});
-
-const BODY_FRONT = {
-  _sil:"M50 27 L44 27 Q40 31 30 33 Q20 35 19 48 Q17 60 18 70 Q14 82 14 94 L12 104 L18 106 L21 95 Q27 82 29 70 L31 60 Q33 72 32 86 Q30 96 31 110 Q29 130 31 148 Q29 170 32 194 L30 203 L42 203 L41 194 Q44 172 42 154 Q46 130 48 112 L50 109 Z",
-  traps:["M45 27 Q41 31 34 33 L45 34 Z"],
-  front_delt:["M34 34 Q27 34 25 40 Q27 46 31 47 Q34 41 38 37 Z"],
-  side_delt:["M27 34 Q20 37 20 48 L23 50 Q23 41 28 37 Z"],
-  chest:["M38 36 Q44 35 49.3 37 L49.3 55 Q42 59 34 54 Q31 48 33 44 Q35 39 38 36 Z"],
-  biceps:["M23 51 Q20 58 21 68 Q24 70 27 67 Q29 58 28 50 Q26 48 23 51 Z"],
-  triceps:["M28.5 50 Q30.5 58 28.5 67 L30 64 Q31.5 56 30.5 48 Z"],
-  forearms:["M20.5 70 Q16 80 15.5 93 L20 94 Q25 83 28.5 70 Q25 72 20.5 70 Z"],
-  abs:["M43 58.5 L49.3 58.5 L49.3 66 L43 66.5 Z","M43 68 L49.3 67.5 L49.3 76 L43 76.5 Z","M43 78 L49.3 77.5 L49.3 86.5 L43 87 Z","M43 88.5 L49.3 88 L49.3 104 Q45 101 43 97 Z"],
-  obliques:["M34 56 Q37 57 41.5 58.5 L41.5 98 Q37 95 33.5 88 Q34.5 72 34 56 Z"],
-  quads:["M34 100 Q30 116 32 138 Q35 146 40.5 146 Q46 126 47.5 108 Q41 103 34 100 Z"],
-  calves:["M33 157 Q30 172 34 191 L39 191 Q42.5 172 41 157 Q37 155 33 157 Z"],
-  _n:["M48 109 Q47 126 42.5 146 L44.5 144 Q49 128 49.3 112 Z"],
-};
-const BODY_BACK = {
-  _sil:BODY_FRONT._sil,
-  traps:["M50 23 L45 26.5 Q40 31 31 33.5 Q40 37 43.5 44 L50 60 Z"],
-  rear_delt:["M31 34.5 Q25 36 23.5 43 Q29 44.5 34 39.5 Z"],
-  side_delt:["M27 34 Q20 37 20 48 L23 50 Q22 41 26 37 Z"],
-  triceps:["M23 50 Q19 58 21 68 L28 67.5 Q29.5 58 28 49 Q25 47.5 23 50 Z"],
-  forearms:["M20.5 70 Q16 80 15.5 93 L20 94 Q25 83 28.5 70 Q25 72 20.5 70 Z"],
-  midback:["M42.5 45 Q36.5 46.5 35.5 53 Q41 59 49.3 63 L49.3 58 Z"],
-  lats:["M34.5 52 Q30 64 33 79 Q38 89 44 93 L45 78 Q40 65 35.5 55 Z"],
-  lowerback:["M45.5 64 L49.3 65 L49.3 98 L44 96 Q46 82 45.5 64 Z"],
-  obliques:["M33 81 Q33.5 90 35 96 L43 96 Q38 91 33 81 Z"],
-  glutes:["M33.5 97 Q30 108 33.5 118 Q42 124 49.3 119 L49.3 99 Q41 95 33.5 97 Z"],
-  hamstrings:["M33 121 Q31 134 33 146 Q38 150 42 148 Q47 134 48 123 Q40 125 33 121 Z"],
-  calves:["M32.5 154 Q29 166 33 180 Q37 184 41 180 Q43.5 166 41.5 154 Q37 151 32.5 154 Z"],
-};
-function bodyHalf(map, P, S){
-  let out="";
-  for (const k in map){
-    if(k==="_sil") continue;
-    const cls = P.has(k)?"mp":S.has(k)?"ms":"mn";
-    map[k].forEach(d=>{ out+=`<path class="${cls}" d="${d}"/>`; });
-  }
-  return out;
-}
-function bodyFig(map,P,S,x,label){
-  const half = bodyHalf(map,P,S);
-  const sil = `<path d="${map._sil}" fill="#20252f"/>`;
-  return `<g transform="translate(${x},0)">
-    <ellipse cx="50" cy="15" rx="8.5" ry="10.5" fill="#2c3340"/>
-    <path d="M45 23 L55 23 L56 29 L44 29Z" fill="#2c3340"/>
-    ${sil}<g transform="translate(100,0) scale(-1,1)">${sil}</g>
-    ${half}<g transform="translate(100,0) scale(-1,1)">${half}</g>
-    <ellipse cx="17" cy="100" rx="3.5" ry="5" fill="#2c3340"/><ellipse cx="83" cy="100" rx="3.5" ry="5" fill="#2c3340"/>
-    <text x="50" y="214" text-anchor="middle" fill="#8b95a8" font-size="8">${label}</text></g>`;
-}
-function bodySvg(view, activeMuscles, exId) {
-  const m = MUSCLE_MAP[exId] || {p:activeMuscles||[],s:[]};
-  const P=new Set(m.p), S=new Set(m.s);
-  return `<svg class="musclemap" viewBox="0 0 210 240" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-  <defs><style>
-   .mn{fill:#3c4456;stroke:#161a22;stroke-width:.6}
-   .ms{fill:#ff9459;stroke:#3a1a10;stroke-width:.6}
-   .mp{fill:#ff3030;stroke:#4a0c0c;stroke-width:.6;filter:url(#glow)}
-  </style>
-  <filter id="glow" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="1.4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
-  ${bodyFig(BODY_FRONT,P,S,2,"正面")}${bodyFig(BODY_BACK,P,S,108,"背面")}
-  <g font-size="7.5" fill="#c9d1de">
-   <rect x="22" y="226" width="8" height="8" rx="2" fill="#ff3030"/><text x="33" y="233">主要</text>
-   <rect x="82" y="226" width="8" height="8" rx="2" fill="#ff9459"/><text x="93" y="233">次要</text>
-   <rect x="142" y="226" width="8" height="8" rx="2" fill="#3c4456"/><text x="153" y="233">未参与</text>
-  </g></svg>`;
-}
-
-/* ========== 动作示意：比例人体 + 器械 + 起止姿态 ========== */
-const L = {sh:24, th:34, to:44, ua:24, fa:22, ft:10, neck:6, head:8.5};
-const dir = (a)=>{const r=a*Math.PI/180;return [Math.sin(r),Math.cos(r)];};
-const add=(p,a,l)=>{const d=dir(a);return [p[0]+d[0]*l,p[1]+d[1]*l];};
-function solve(q){
-  const j={};
-  if(q.ankle){ j.ankle=q.ankle; j.knee=add(j.ankle,q.sh,L.sh); j.hip=add(j.knee,q.th,L.th); }
-  else { j.hip=q.hip; j.knee=add(j.hip,q.th,L.th); j.ankle=add(j.knee,q.sh,L.sh); }
-  j.toe=add(j.ankle,q.ft??90,L.ft);
-  j.sho=add(j.hip,q.to,L.to);
-  j.neck=add(j.sho,q.to+(q.nk||0),L.neck);
-  j.head=add(j.neck,q.to+(q.nk||0),L.head);
-  j.elb=add(j.sho,q.ua,L.ua);
-  j.wri=add(j.elb,q.fa,L.fa);
-  return j;
-}
-const ln=(a,b,w,c,extra="")=>`<line x1="${a[0].toFixed(1)}" y1="${a[1].toFixed(1)}" x2="${b[0].toFixed(1)}" y2="${b[1].toFixed(1)}" stroke="${c}" stroke-width="${w}" stroke-linecap="round" ${extra}/>`;
-function person(j, ghost, hl){
-  hl=new Set(hl||[]);
-  const base = ghost? "#6f7a90" : "url(#skin)";
-  const far = ghost? "#596378" : "#8994a8";
-  const H = (k,c)=> (!ghost && hl.has(k)) ? "url(#hot)" : c;
-  const o = ghost? `opacity=".38"` : "";
-  const sh=(p)=>[p[0]+3,p[1]-2.5];
-  let s=`<g ${o}>`;
-  // far limbs
-  s+=ln(sh(j.hip),sh(j.knee),10,H("thigh",far))+ln(sh(j.knee),sh(j.ankle),7.5,H("shin",far))+ln(sh(j.ankle),sh(j.toe),4.5,far);
-  s+=ln(sh(j.sho),sh(j.elb),7.5,H("ua",far))+ln(sh(j.elb),sh(j.wri),6,H("fa",far));
-  // torso (tapered: chest wider)
-  const mid=[(j.hip[0]*.45+j.sho[0]*.55),(j.hip[1]*.45+j.sho[1]*.55)];
-  s+=ln(j.hip,mid,14,H("torso",base))+ln(mid,j.sho,16.5,H("torso",base));
-  s+=ln(j.sho,j.neck,6,base);
-  s+=`<circle cx="${j.head[0].toFixed(1)}" cy="${j.head[1].toFixed(1)}" r="${L.head}" fill="${base}"/>`;
-  // near limbs
-  s+=ln(j.hip,j.knee,11.5,H("thigh",base))+ln(j.knee,j.ankle,8.5,H("shin",base))+ln(j.ankle,j.toe,5,base);
-  s+=ln(j.sho,j.elb,8.5,H("ua",base))+ln(j.elb,j.wri,7,H("fa",base));
-  s+=`<circle cx="${j.wri[0].toFixed(1)}" cy="${j.wri[1].toFixed(1)}" r="3.6" fill="${base}"/>`;
-  return s+"</g>";
-}
-const M="#55607a", MD="#39414f", STEEL="#aab3c2";
-const rect=(x,y,w,h,c=M,r=2)=>`<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${r}" fill="${c}"/>`;
-const plate=(p,r=11)=>`<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="${r}" fill="#22272f" stroke="${STEEL}" stroke-width="2.2"/><circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="2.2" fill="${STEEL}"/>`;
-const db=(p)=>`<g transform="translate(${p[0].toFixed(1)},${p[1].toFixed(1)})"><rect x="-9" y="-1.6" width="18" height="3.2" fill="${STEEL}"/><rect x="-10" y="-5" width="4.5" height="10" rx="1.2" fill="#2b3039" stroke="${STEEL}" stroke-width="1.2"/><rect x="5.5" y="-5" width="4.5" height="10" rx="1.2" fill="#2b3039" stroke="${STEEL}" stroke-width="1.2"/></g>`;
-const cable=(a,b)=>ln(a,b,1.4,"#d6dbe4",`stroke-dasharray="0"`);
-const pulley=(p)=>`<circle cx="${p[0]}" cy="${p[1]}" r="4.5" fill="#22272f" stroke="${STEEL}" stroke-width="1.6"/>`;
-const floor=`<line x1="6" y1="146" x2="194" y2="146" stroke="#3a4252" stroke-width="2"/>`;
-function arrow(a,b,bend=0){
-  const mx=(a[0]+b[0])/2, my=(a[1]+b[1])/2, dx=b[0]-a[0], dy=b[1]-a[1], len=Math.hypot(dx,dy)||1;
-  const c=[mx-dy/len*bend, my+dx/len*bend];
-  return `<path d="M${a[0].toFixed(1)} ${a[1].toFixed(1)} Q${c[0].toFixed(1)} ${c[1].toFixed(1)} ${b[0].toFixed(1)} ${b[1].toFixed(1)}" fill="none" stroke="#ffd166" stroke-width="2" stroke-dasharray="4 3" marker-end="url(#ah)"/>`;
-}
-const POSES = {
-  bench:{a:{hip:[118,96],to:270,nk:0,th:80,sh:5,ua:355,fa:178},b:{hip:[118,96],to:270,th:80,sh:5,ua:180,fa:180},track:"wri",hl:["torso","ua"],
-    eq:(A,B)=>rect(60,100,72,7)+rect(70,107,5,39,MD,1)+rect(120,107,5,39,MD,1)+rect(52,40,6,106,MD,1)+`<path d="M50 52 h10" stroke="${STEEL}" stroke-width="3"/>`,
-    tool:(j)=>plate(j.wri,12)},
-  ohp:{a:{hip:[100,104],to:180,th:90,sh:0,ua:80,fa:178},b:{hip:[100,104],to:180,th:90,sh:0,ua:172,fa:178},track:"wri",hl:["ua"],
-    eq:()=>rect(84,106,40,6)+rect(84,50,7,58)+rect(100,112,5,34,MD,1),tool:(j)=>db(j.wri)},
-  fly:{front:true,a:{abd:88,cross:0},b:{abd:88,cross:1},track:"wri",
-    eq:()=>rect(84,40,32,72,MD,4)},
-  lateral:{front:true,a:{abd:10,cross:0},b:{abd:85,cross:0},track:"wri",tool:true},
-  pushdown:{a:{ankle:[96,140],sh:180,th:182,to:172,ua:8,fa:150},b:{ankle:[96,140],sh:180,th:182,to:172,ua:8,fa:6},track:"wri",hl:["ua"],
-    eq:(A,B)=>rect(140,14,8,132,MD,1)+pulley([136,22])+cable([136,22],B.wri)+cable([136,22],A.wri).replace('stroke="#d6dbe4"','stroke="#d6dbe4" opacity=".35"')},
-  latpulldown:{a:{hip:[96,108],to:180,th:90,sh:0,ua:172,fa:180},b:{hip:[96,108],to:178,th:90,sh:0,ua:340,fa:168},track:"wri",hl:["torso"],
-    eq:(A,B)=>rect(80,110,40,6)+rect(96,116,5,30,MD,1)+rect(118,88,18,6)+rect(150,6,8,140,MD,1)+pulley([146,10])+cable([146,10],B.wri)+rect(B.wri[0]-14,B.wri[1]-2,28,4,STEEL,1)},
-  seatedrow:{a:{hip:[66,118],to:178,th:82,sh:30,ft:160,ua:92,fa:92},b:{hip:[66,118],to:185,th:82,sh:30,ft:160,ua:330,fa:82},track:"wri",hl:["torso"],
-    eq:(A,B)=>rect(40,120,70,7)+rect(52,127,5,19,MD,1)+rect(110,108,6,38,M,1)+rect(176,30,8,116,MD,1)+pulley([170,106])+cable([170,106],B.wri)},
-  tbar:{a:{ankle:[136,140],sh:178,th:186,to:132,nk:-10,ua:2,fa:0},b:{ankle:[136,140],sh:178,th:186,to:132,nk:-10,ua:300,fa:20},track:"wri",hl:["torso"],
-    eq:(A,B)=>`<path d="M98 60 L130 88 L122 96 L90 68Z" fill="${M}"/>`+rect(112,94,6,52,MD,1)+rect(124,136,30,5,MD,1)+`<line x1="30" y1="140" x2="${B.wri[0]}" y2="${B.wri[1]}" stroke="${STEEL}" stroke-width="3"/>`,
-    tool:(j)=>plate([j.wri[0]-14,j.wri[1]+4],10)},
-  facecpull:{a:{ankle:[86,140],sh:180,th:180,to:184,ua:94,fa:94},b:{ankle:[86,140],sh:180,th:180,to:184,ua:232,fa:118},track:"elb",hl:["ua"],
-    eq:(A,B)=>rect(160,10,8,136,MD,1)+pulley([156,36])+cable([156,36],B.wri)},
-  curl:{a:{ankle:[96,140],sh:180,th:180,to:180,ua:3,fa:4},b:{ankle:[96,140],sh:180,th:180,to:180,ua:3,fa:160},track:"wri",hl:["ua"],tool:(j)=>db(j.wri)},
-  squat:{a:{ankle:[100,140],sh:180,th:180,to:180,ua:330,fa:150},b:{ankle:[100,140],sh:148,th:268,to:140,ua:300,fa:130},track:"sho",hl:["thigh"],
-    eq:()=>"",tool:(j)=>plate([j.sho[0]-2,j.sho[1]-3],12)},
-  rdl:{a:{ankle:[104,140],sh:176,th:180,to:180,ua:0,fa:0},b:{ankle:[104,140],sh:172,th:198,to:102,nk:-15,ua:2,fa:2},track:"wri",hl:["thigh","torso"],
-    eq:()=>"",tool:(j)=>plate(j.wri,12)},
-  legcurl:{a:{hip:[100,98],to:270,nk:0,th:90,sh:90,ua:6,fa:270},b:{hip:[100,98],to:270,th:90,sh:205,ua:6,fa:270},track:"ankle",hl:["thigh"],
-    eq:(A,B)=>rect(48,104,110,7)+rect(60,111,5,35,MD,1)+rect(140,111,5,35,MD,1)+`<circle cx="${B.ankle[0].toFixed(1)}" cy="${(B.ankle[1]+5).toFixed(1)}" r="5.5" fill="${M}"/>`},
-  legext:{a:{hip:[90,104],to:172,th:90,sh:8,ft:95,ua:20,fa:60},b:{hip:[90,104],to:172,th:90,sh:88,ft:180,ua:20,fa:60},track:"ankle",hl:["thigh"],
-    eq:(A,B)=>rect(74,106,46,7)+rect(70,52,7,60)+rect(92,113,5,33,MD,1)+`<circle cx="${(B.ankle[0]+1).toFixed(1)}" cy="${(B.ankle[1]+6).toFixed(1)}" r="5.5" fill="${M}"/>`},
-  core:{a:{hip:[110,136],to:270,nk:0,th:145,sh:40,ft:90,ua:320,fa:60},b:{hip:[110,136],to:235,nk:-15,th:145,sh:40,ua:300,fa:40},track:"sho",hl:["torso"],
-    eq:()=>rect(30,141,150,5,MD,2)},
-};
-function frontPerson(abd, cross, ghost, withDb){
-  const base=ghost?"#6f7a90":"url(#skin)", o=ghost?`opacity=".38"`:"";
-  const cx=100, sy=56;
-  let s=`<g ${o}>`;
-  s+=ln([cx-9,100],[cx-12,140],11,base)+ln([cx+9,100],[cx+12,140],11,base);
-  s+=`<path d="M${cx-20} ${sy-4} Q${cx} ${sy-8} ${cx+20} ${sy-4} L${cx+13} 102 L${cx-13} 102Z" fill="${base}"/>`;
-  s+=ln([cx,sy-8],[cx,sy-12],7,base)+`<circle cx="${cx}" cy="${sy-21}" r="${L.head}" fill="${base}"/>`;
-  [-1,1].forEach(side=>{
-    const sh=[cx+side*19,sy];
-    let el,wr;
-    if(cross){ el=[cx+side*34,sy+6]; wr=[cx+side*5,sy+8]; }
-    else { const a=abd*Math.PI/180; el=[sh[0]+side*Math.sin(a)*L.ua,sh[1]+Math.cos(a)*L.ua]; const b=(abd-(abd>50?0:4))*Math.PI/180; wr=[el[0]+side*Math.sin(b)*L.fa,el[1]+Math.cos(b)*L.fa]; }
-    s+=ln(sh,el,8.5,ghost?base:"url(#hot)")+ln(el,wr,7,base)+`<circle cx="${wr[0].toFixed(1)}" cy="${wr[1].toFixed(1)}" r="3.6" fill="${base}"/>`;
-    if(withDb) s+=db(wr).replace('<g ','<g ');
-    if(side===1) s+=`<!--w${wr[0].toFixed(1)},${wr[1].toFixed(1)}-->`;
-  });
-  return s+"</g>";
-}
-function exerciseIcon(kind) {
-  const P = POSES[kind] || POSES.bench;
-  const defs = `<defs><linearGradient id="skin" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#e4e9f1"/><stop offset="1" stop-color="#a9b3c4"/></linearGradient>
-   <linearGradient id="hot" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff6b5e"/><stop offset="1" stop-color="#d81f26"/></linearGradient>
-   <marker id="ah" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0 0 L10 5 L0 10Z" fill="#ffd166"/></marker></defs>`;
-  let body="";
-  if(P.front){
-    const eq = P.eq?P.eq():"";
-    body = floor+eq+frontPerson(P.a.abd,P.a.cross,true,!!P.tool)+frontPerson(P.b.abd,P.b.cross,false,!!P.tool);
-    const w=(q)=>{ if(q.cross) return [105,64]; const a=q.abd*Math.PI/180; const el=[119+Math.sin(a)*L.ua,56+Math.cos(a)*L.ua]; const b=(q.abd-(q.abd>50?0:4))*Math.PI/180; return [el[0]+Math.sin(b)*L.fa+3,el[1]+Math.cos(b)*L.fa-3]; };
-    body += arrow(w(P.a),w(P.b),P.b.cross?-14:-18);
-  } else {
-    const A=solve(P.a), B=solve(P.b);
-    const eq = P.eq?P.eq(A,B):"";
-    const tool=P.tool||(()=> "");
-    body = floor+eq+`<g opacity=".38">${tool(A)}</g>`+person(A,true)+person(B,false,P.hl)+tool(B);
-    const t=P.track;
-    body += arrow(A[t],B[t],-16);
-  }
-  return `<svg class="exfig" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 150" aria-hidden="true">${defs}<rect width="200" height="150" rx="12" fill="#151922"/>${body}</svg>`;
-}
-
-/* ========== Storage ========== */
+/* ---------- state (兼容旧数据) ---------- */
 function loadState() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) {
-      return { lastCompletedDay: null, today: null, history: [] };
-    }
-    return JSON.parse(raw);
-  } catch {
-    return { lastCompletedDay: null, today: null, history: [] };
-  }
+  var s = null;
+  try { s = JSON.parse(localStorage.getItem(STORAGE_KEY)); } catch (e) {}
+  if (!s || typeof s !== "object") s = {};
+  if (!Array.isArray(s.history)) s.history = [];
+  if (!("lastCompletedDay" in s)) s.lastCompletedDay = null;
+  if (!("today" in s)) s.today = null;
+  s.history = s.history.filter(function (h) { return h && h.date; }).map(normSession);
+  if (s.today) s.today = normSession(s.today);
+  return s;
 }
-
-function saveState(state) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-}
-
-function todayKey() {
-  const d = new Date();
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
-  return `${y}-${m}-${day}`;
-}
-
-function emptySession(dayType) {
-  const exercises = PLAN[dayType].map((ex) => ({
-    id: ex.id,
-    sets: Array.from({ length: ex.sets }, () => ({
-      done: false,
-      weight: "",
-      reps: "",
-    })),
-  }));
-  return {
-    date: todayKey(),
-    dayType,
-    note: "",
-    exercises,
-    completedAt: null,
-  };
-}
-
-function ensureTodaySession(state, dayType) {
-  if (
-    state.today &&
-    state.today.date === todayKey() &&
-    state.today.dayType === dayType
-  ) {
-    return state.today;
-  }
-  // 若今天已有同日类型会话则保留；换日类型则新建
-  if (state.today && state.today.date === todayKey() && state.today.dayType !== dayType) {
-    state.today = emptySession(dayType);
-  } else if (!state.today || state.today.date !== todayKey()) {
-    state.today = emptySession(dayType);
-  } else {
-    state.today = emptySession(dayType);
-  }
-  saveState(state);
-  return state.today;
-}
-
-/* ========== UI ========== */
-const $ = (sel) => document.querySelector(sel);
-
-let state = loadState();
-let currentDay = null;
-let detailExId = null;
-
-function suggestedDay() {
-  if (!state.lastCompletedDay) return "push";
-  return NEXT_DAY[state.lastCompletedDay] || "push";
-}
-
-function updateSuggest() {
-  const s = suggestedDay();
-  const last = state.lastCompletedDay
-    ? DAY_SHORT[state.lastCompletedDay]
-    : null;
-  const el = $("#suggestText");
-  if (last) {
-    el.textContent = `建议今天练「${DAY_SHORT[s]}」（上次完成：${last}）`;
-  } else {
-    el.textContent = `新手建议从「推」开始 · 今天可练「${DAY_SHORT[s]}」`;
-  }
-}
-
-function setActiveDayBtns(day) {
-  document.querySelectorAll(".day-btn").forEach((btn) => {
-    btn.classList.toggle("active", btn.dataset.day === day);
+function normSession(h) {
+  if (!PLAN[h.dayType]) h.dayType = "push";
+  if (!Array.isArray(h.exercises)) h.exercises = [];
+  h.exercises = h.exercises.filter(Boolean).map(function (e) {
+    var sets = Array.isArray(e.sets) ? e.sets : [];
+    return Object.assign({}, e, { sets: sets.map(function (x) { x = x || {}; return Object.assign({}, x, { done: !!x.done, weight: x.weight == null ? "" : String(x.weight), reps: x.reps == null ? "" : String(x.reps) }); }) });
   });
+  return h;
 }
-
-function findExData(dayType, exId) {
-  return PLAN[dayType].find((e) => e.id === exId);
+function saveState() { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+function emptySession(day) {
+  return { date: todayKey(), dayType: day, note: "", completedAt: null,
+    exercises: PLAN[day].map(function (e) { return { id: e.id, sets: Array.from({ length: e.sets }, function () { return { done: false, weight: "", reps: "" }; }) }; }) };
 }
+var state = loadState();
+var curDay = "push";
 
-function findSessionEx(exId) {
-  return state.today.exercises.find((e) => e.id === exId);
-}
-
-function progressStats() {
-  if (!state.today) return { done: 0, total: 0 };
-  let done = 0;
-  let total = 0;
-  state.today.exercises.forEach((ex) => {
-    ex.sets.forEach((s) => {
-      total += 1;
-      if (s.done) done += 1;
-    });
+function suggestedDay() { return NEXT_DAY[state.lastCompletedDay] || "push"; }
+function ensureToday(day) {
+  var t = state.today;
+  if (!t || t.date !== todayKey() || t.dayType !== day) {
+    // 若今天已完成过这一类型，从历史恢复以便修改
+    var h = state.history.find(function (x) { return x.date === todayKey() && x.dayType === day; });
+    state.today = h ? normSession(JSON.parse(JSON.stringify(h))) : emptySession(day);
+  }
+  // 与计划对齐（旧 id 保留数据）
+  var byId = {}; state.today.exercises.forEach(function (e) { byId[e.id] = e; });
+  state.today.exercises = PLAN[day].map(function (d) {
+    var e = byId[d.id] || { id: d.id, sets: [] };
+    while (e.sets.length < d.sets) e.sets.push({ done: false, weight: "", reps: "" });
+    return e;
   });
-  return { done, total };
+  saveState();
 }
 
+/* ---------- main UI ---------- */
+function progress() {
+  var done = 0, total = 0;
+  if (state.today) state.today.exercises.forEach(function (e) { e.sets.forEach(function (s) { total++; if (s.done) done++; }); });
+  return { done: done, total: total };
+}
 function updateProgress() {
-  const { done, total } = progressStats();
-  const pct = total ? Math.round((done / total) * 100) : 0;
-  $("#progressFill").style.width = `${pct}%`;
-  $("#progressText").textContent = `${done} / ${total} 组`;
+  var p = progress();
+  $("progText").textContent = "今日进度 " + p.done + "/" + p.total + " 组";
+  $("progBar").style.width = (p.total ? p.done / p.total * 100 : 0) + "%";
 }
-
-function renderExercises() {
-  const list = $("#exerciseList");
-  list.innerHTML = "";
-  if (!state.today) return;
-
-  PLAN[state.today.dayType].forEach((exDef, idx) => {
-    const sess = state.today.exercises[idx];
-    const allDone = sess.sets.every((s) => s.done);
-    const muscleLabel = exDef.muscles.map((m) => MUSCLE_NAMES[m] || m).join(" · ");
-
-    const card = document.createElement("article");
-    card.className = "ex-card" + (allDone ? " done" : "");
-    card.innerHTML = `
-      <div class="ex-head">
-        <div class="ex-thumb">${exerciseIcon(exDef.icon)}</div>
-        <div class="ex-meta">
-          <div class="ex-name">${exDef.name}</div>
-          <div class="ex-reps">${exDef.sets} 组 × ${exDef.reps} 次</div>
-          <div class="ex-muscles">肌群：${muscleLabel}</div>
-        </div>
-        <button type="button" class="btn-detail" data-detail="${exDef.id}">示意</button>
-      </div>
-      <div class="sets-row" data-ex="${exDef.id}"></div>
-    `;
-
-    const setsRow = card.querySelector(".sets-row");
-    sess.sets.forEach((set, si) => {
-      const chip = document.createElement("button");
-      chip.type = "button";
-      chip.className = "set-chip" + (set.done ? " checked" : "");
-      const wr =
-        set.weight || set.reps
-          ? `${set.weight || "—"}${set.weight ? "kg" : ""} × ${set.reps || "—"}`
-          : "点我打卡";
-      chip.innerHTML = `<strong>第 ${si + 1} 组</strong>${set.done ? "✓ " + wr : wr}`;
-      chip.addEventListener("click", () => {
-        // 简单切换完成；若要记重量打开详情
-        set.done = !set.done;
-        saveState(state);
-        renderExercises();
-        updateProgress();
-      });
-      chip.addEventListener("contextmenu", (e) => {
-        e.preventDefault();
-        openDetail(exDef.id);
-      });
-      setsRow.appendChild(chip);
-    });
-
-    card.querySelector("[data-detail]").addEventListener("click", () => {
-      openDetail(exDef.id);
-    });
-
-    list.appendChild(card);
+function updateSuggest() {
+  var s = suggestedDay();
+  $("suggest").textContent = state.lastCompletedDay ? "上次练「" + DAY_SHORT[state.lastCompletedDay] + "」，今天建议练「" + DAY_SHORT[s] + "」💪" : "第一次打卡，从「推」开始吧 💪";
+}
+function renderTabs() {
+  var sug = suggestedDay();
+  [].forEach.call(document.querySelectorAll(".tab"), function (b) {
+    var d = b.dataset.day; b.classList.toggle("on", d === curDay);
+    b.textContent = DAY_SHORT[d] + (d === curDay ? " 💪" : "") + (d === sug && d !== curDay ? " ·荐" : "");
   });
-
-  updateProgress();
 }
-
-function selectDay(day) {
-  currentDay = day;
-  setActiveDayBtns(day);
-  ensureTodaySession(state, day);
-  // 重新同步 exercises 长度（防计划变更）
-  const plan = PLAN[day];
-  const byId = Object.fromEntries(state.today.exercises.map((e) => [e.id, e]));
-  state.today.exercises = plan.map((ex) => {
-    if (byId[ex.id]) {
-      // 保证组数
-      while (byId[ex.id].sets.length < ex.sets) {
-        byId[ex.id].sets.push({ done: false, weight: "", reps: "" });
-      }
-      byId[ex.id].sets = byId[ex.id].sets.slice(0, ex.sets);
-      return byId[ex.id];
-    }
-    return {
-      id: ex.id,
-      sets: Array.from({ length: ex.sets }, () => ({
-        done: false,
-        weight: "",
-        reps: "",
-      })),
-    };
-  });
-  state.today.dayType = day;
-  saveState(state);
-
-  $("#sessionPanel").hidden = false;
-  $("#historyPanel").hidden = true;
-  $("#sessionTitle").textContent = `今日 · ${DAY_LABELS[day]}`;
-  $("#sessionNote").value = state.today.note || "";
-  renderExercises();
+function renderCards() {
+  var html = PLAN[curDay].map(function (d, i) {
+    var e = state.today.exercises[i];
+    var rows = e.sets.map(function (s, j) {
+      return '<div class="set"><button class="ck' + (s.done ? " on" : "") + '" data-ck="' + i + "," + j + '" aria-label="完成第' + (j + 1) + '组">' + (s.done ? "✓" : "") + '</button>组 ' + (j + 1) +
+        '<input class="in" inputmode="decimal" placeholder=" " data-f="weight" data-ij="' + i + "," + j + '" value="' + esc(s.weight) + '">kg ×' +
+        '<input class="in" inputmode="numeric" placeholder=" " data-f="reps" data-ij="' + i + "," + j + '" value="' + esc(s.reps) + '">次</div>';
+    }).join("");
+    return '<div class="card"><h3>' + d.name + "<small>" + d.sets + "×" + d.reps + '</small></h3><div class="row"><button class="img" data-mus="' + i + '" aria-label="查看发力肌群"><img src="' + A + d.img + '-action.webp" alt="' + d.name + '" loading="lazy"></button><div class="sets">' + rows + "</div></div></div>";
+  }).join("");
+  $("cards").innerHTML = html;
 }
+function selectDay(day) { curDay = day; ensureToday(day); renderTabs(); renderCards(); updateProgress(); }
 
-function openDetail(exId) {
-  detailExId = exId;
-  const exDef = findExData(state.today.dayType, exId);
-  const sess = findSessionEx(exId);
-  if (!exDef || !sess) return;
-
-  $("#modalTitle").textContent = exDef.name;
-  $("#modalTips").textContent = exDef.tips;
-  $("#modalIcon").innerHTML = exerciseIcon(exDef.icon);
-  $("#modalMuscle").innerHTML = bodySvg(exDef.muscleView, exDef.muscles, exDef.id);
-
-  const setsEl = $("#modalSets");
-  setsEl.innerHTML = `<h4>记录每组重量 × 次数</h4>`;
-  sess.sets.forEach((set, si) => {
-    const row = document.createElement("div");
-    row.className = "log-set";
-    row.innerHTML = `
-      <div class="log-set-top">
-        <label>
-          <input type="checkbox" ${set.done ? "checked" : ""} data-si="${si}" />
-          第 ${si + 1} 组完成
-        </label>
-      </div>
-      <div class="log-fields">
-        <div>
-          <label>重量 (kg)</label>
-          <input type="number" inputmode="decimal" min="0" step="0.5" placeholder="如 40" value="${set.weight}" data-w="${si}" />
-        </div>
-        <div>
-          <label>次数</label>
-          <input type="number" inputmode="numeric" min="0" step="1" placeholder="如 10" value="${set.reps}" data-r="${si}" />
-        </div>
-      </div>
-    `;
-    row.querySelector('input[type="checkbox"]').addEventListener("change", (e) => {
-      set.done = e.target.checked;
-      saveState(state);
-      renderExercises();
-    });
-    row.querySelector(`[data-w="${si}"]`).addEventListener("input", (e) => {
-      set.weight = e.target.value;
-      saveState(state);
-      renderExercises();
-    });
-    row.querySelector(`[data-r="${si}"]`).addEventListener("input", (e) => {
-      set.reps = e.target.value;
-      saveState(state);
-      renderExercises();
-    });
-    setsEl.appendChild(row);
-  });
-
-  $("#detailModal").hidden = false;
-}
-
-function closeDetail() {
-  $("#detailModal").hidden = true;
-  detailExId = null;
-  renderExercises();
-}
-
-function completeSession() {
-  if (!state.today) return;
-  const { done, total } = progressStats();
-  if (done === 0) {
-    alert("还没有勾选任何一组，先打卡再完成吧。");
-    return;
-  }
-  state.today.note = $("#sessionNote").value.trim();
+$("tabs").addEventListener("click", function (ev) { var b = ev.target.closest(".tab"); if (b) selectDay(b.dataset.day); });
+$("cards").addEventListener("click", function (ev) {
+  var c = ev.target.closest("[data-ck]");
+  if (c) { var ij = c.dataset.ck.split(","), s = state.today.exercises[ij[0]].sets[ij[1]]; s.done = !s.done; c.classList.toggle("on", s.done); c.textContent = s.done ? "✓" : ""; saveState(); updateProgress(); return; }
+  var m = ev.target.closest("[data-mus]");
+  if (m) openMuscle(PLAN[curDay][m.dataset.mus]);
+});
+$("cards").addEventListener("input", function (ev) {
+  var t = ev.target; if (!t.dataset.ij) return;
+  var ij = t.dataset.ij.split(","), s = state.today.exercises[ij[0]].sets[ij[1]];
+  s[t.dataset.f] = t.value.trim();
+  if (s.weight && s.reps && !s.done) { s.done = true; var ck = t.parentNode.querySelector(".ck"); ck.classList.add("on"); ck.textContent = "✓"; updateProgress(); }
+  saveState();
+});
+function openMuscle(d) { $("musTitle").textContent = d.name + " · 发力肌群"; $("musImg").src = A + d.mus + "-muscle.webp"; $("musModal").classList.add("on"); }
+[].forEach.call(document.querySelectorAll(".modal"), function (m) {
+  m.addEventListener("click", function (ev) { if (ev.target === m || ev.target.closest("[data-close]")) m.classList.remove("on"); });
+});
+$("doneBtn").onclick = function () {
+  var p = progress();
+  if (!p.done) { toast("还没有勾选任何一组，先打卡再完成吧～"); return; }
   state.today.completedAt = new Date().toISOString();
   state.lastCompletedDay = state.today.dayType;
-
-  // 写入历史（同日同类型覆盖）
-  const snap = JSON.parse(JSON.stringify(state.today));
-  state.history = state.history.filter(
-    (h) => !(h.date === snap.date && h.dayType === snap.dayType)
-  );
+  var snap = JSON.parse(JSON.stringify(state.today));
+  state.history = state.history.filter(function (h) { return !(h.date === snap.date && h.dayType === snap.dayType); });
   state.history.unshift(snap);
-  if (state.history.length > 60) state.history = state.history.slice(0, 60);
+  state.history.sort(function (a, b) { return a.date < b.date ? 1 : a.date > b.date ? -1 : 0; });
+  if (state.history.length > 365) state.history = state.history.slice(0, 365);
+  saveState(); updateSuggest(); renderTabs();
+  toast("已保存！完成 " + p.done + "/" + p.total + " 组，下次建议练「" + DAY_SHORT[suggestedDay()] + "」");
+};
 
-  saveState(state);
-  updateSuggest();
-  alert(`已保存！完成 ${done}/${total} 组。下次建议练「${DAY_SHORT[suggestedDay()]}」。`);
+/* ---------- profile ---------- */
+var PD = { h: 187, w: 75, lv: "新手" };
+function loadProfile() { try { var p = JSON.parse(localStorage.getItem(PROFILE_KEY)); if (p && p.h && p.w && p.lv) return p; } catch (e) {} return PD; }
+function f1(n) { return String(Math.round(n * 10) / 10); }
+function renderProfile() { var p = loadProfile(), b = p.w / Math.pow(p.h / 100, 2); $("pfText").innerHTML = f1(p.h) + "cm · " + f1(p.w) + "kg · " + esc(p.lv) + ' ✏️<span class="pf-bmi">BMI ' + b.toFixed(1) + "</span>"; }
+$("pfChip").onclick = function () {
+  var p = loadProfile(); $("pfH").value = p.h; $("pfW").value = p.w;
+  var std = ["新手", "进阶", "熟练"].indexOf(p.lv) >= 0;
+  $("pfLvSel").value = std ? p.lv : "__c"; $("pfLvCustom").value = std ? "" : p.lv; $("pfLvCustom").style.display = std ? "none" : "block";
+  $("pfErr").textContent = ""; $("pfMask").classList.add("on");
+};
+$("pfCancel").onclick = function () { $("pfMask").classList.remove("on"); };
+$("pfLvSel").onchange = function () { $("pfLvCustom").style.display = this.value === "__c" ? "block" : "none"; };
+$("pfSave").onclick = function () {
+  var h = parseFloat($("pfH").value), w = parseFloat($("pfW").value), lv = $("pfLvSel").value === "__c" ? $("pfLvCustom").value.trim() : $("pfLvSel").value;
+  if (!(h >= 100 && h <= 250)) return ($("pfErr").textContent = "身高请填 100–250 cm");
+  if (!(w >= 30 && w <= 250)) return ($("pfErr").textContent = "体重请填 30–250 kg");
+  if (!lv) return ($("pfErr").textContent = "请填写训练水平");
+  var old = loadProfile();
+  localStorage.setItem(PROFILE_KEY, JSON.stringify({ h: h, w: w, lv: lv }));
+  if (w !== old.w) addWeight(todayKey(), w);
+  renderProfile(); $("pfMask").classList.remove("on");
+};
+
+/* ---------- weight log ---------- */
+function loadWeights() {
+  var a; try { a = JSON.parse(localStorage.getItem(WEIGHT_KEY)); } catch (e) {}
+  if (!Array.isArray(a)) a = [];
+  return a.filter(function (x) { return x && /^\d{4}-\d{2}-\d{2}$/.test(x.date) && x.kg > 0; }).sort(function (a, b) { return a.date < b.date ? -1 : 1; });
+}
+function addWeight(date, kg) {
+  var a = loadWeights().filter(function (x) { return x.date !== date; });
+  a.push({ date: date, kg: Math.round(kg * 10) / 10 });
+  a.sort(function (a, b) { return a.date < b.date ? -1 : 1; });
+  localStorage.setItem(WEIGHT_KEY, JSON.stringify(a));
+}
+var wRange = "30";
+$("wRange").addEventListener("click", function (ev) { var b = ev.target.closest("button"); if (!b) return; wRange = b.dataset.r; [].forEach.call(this.children, function (c) { c.classList.toggle("on", c === b); }); renderChart(); });
+$("addW").onclick = function () { $("wDate").value = todayKey(); $("wKg").value = loadProfile().w; $("wErr").textContent = ""; $("wModal").classList.add("on"); };
+$("wSave").onclick = function () {
+  var d = $("wDate").value, kg = parseFloat($("wKg").value);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(d)) return ($("wErr").textContent = "请选择日期");
+  if (!(kg >= 30 && kg <= 250)) return ($("wErr").textContent = "体重请填 30–250 kg");
+  addWeight(d, kg);
+  var w = loadWeights();
+  if (w[w.length - 1].date === d) { var p = loadProfile(); localStorage.setItem(PROFILE_KEY, JSON.stringify({ h: p.h, w: Math.round(kg * 10) / 10, lv: p.lv })); renderProfile(); }
+  $("wModal").classList.remove("on"); renderHistory();
+};
+function renderChart() {
+  var all = loadWeights(), pts = all;
+  if (wRange !== "all") { var c = new Date(); c.setDate(c.getDate() - (+wRange - 1)); var ck = dateKey(c); pts = all.filter(function (x) { return x.date >= ck; }); }
+  if (!pts.length) { $("chart").innerHTML = '<div class="empty">' + (all.length ? "这段时间还没有体重记录" : "还没有体重记录，点下面记一笔吧 🐻") + "</div>"; return; }
+  var W = 354, H = 170, x0 = 40, x1 = 330, y0 = 24, y1 = 136;
+  var ks = pts.map(function (p) { return p.kg; }), mn = Math.min.apply(0, ks), mx = Math.max.apply(0, ks);
+  if (mx - mn < 1) { var m = (mx + mn) / 2; mn = m - 0.5; mx = m + 0.5; }
+  var t0 = new Date(pts[0].date).getTime(), t1 = new Date(pts[pts.length - 1].date).getTime();
+  function X(p, i) { return pts.length === 1 ? (x0 + x1) / 2 : t1 === t0 ? x0 + (x1 - x0) * i / (pts.length - 1) : x0 + (x1 - x0) * (new Date(p.date).getTime() - t0) / (t1 - t0); }
+  function Y(k) { return y1 - (y1 - y0) * (k - mn) / (mx - mn); }
+  var xy = pts.map(function (p, i) { return [X(p, i).toFixed(1), Y(p.kg).toFixed(1)]; });
+  var s = '<svg width="100%" viewBox="0 0 ' + W + " " + H + '" style="margin-top:8px;display:block">';
+  s += '<g stroke="#F3E6DA" stroke-dasharray="4 4">';
+  var lab = "";
+  [0, 0.5, 1].forEach(function (f) { var v = mn + (mx - mn) * f, y = Y(v); s += '<line x1="36" y1="' + y + '" x2="346" y2="' + y + '"/>'; lab += '<text x="2" y="' + (y + 4) + '">' + v.toFixed(1) + "</text>"; });
+  s += "</g>";
+  var idx = pts.length <= 5 ? pts.map(function (_, i) { return i; }) : [0, 1, 2, 3, 4].map(function (k) { return Math.round(k * (pts.length - 1) / 4); });
+  idx.forEach(function (i) { lab += '<text x="' + xy[i][0] + '" y="160" text-anchor="middle">' + md(pts[i].date) + "</text>"; });
+  s += '<g font-size="11" fill="#a07070">' + lab + "</g>";
+  var line = xy.map(function (p) { return p.join(","); }).join(" ");
+  if (pts.length > 1) s += '<path d="M' + xy.map(function (p) { return p.join(" "); }).join(" L") + " L" + xy[xy.length - 1][0] + " " + y1 + " L" + xy[0][0] + " " + y1 + 'Z" fill="#FFD9E2" opacity=".55"/><polyline points="' + line + '" fill="none" stroke="#F27C97" stroke-width="3" stroke-linejoin="round"/>';
+  s += '<g fill="#fff" stroke="#F27C97" stroke-width="2.5">' + xy.map(function (p, i) { return '<circle cx="' + p[0] + '" cy="' + p[1] + '" r="' + (i === xy.length - 1 ? 5 : 4) + '"/>'; }).join("") + "</g>";
+  var lx = Math.min(Math.max(+xy[xy.length - 1][0] - 30, 0), W - 64), ly = Math.max(+xy[xy.length - 1][1] - 30, 0);
+  s += '<rect x="' + lx + '" y="' + ly + '" width="62" height="22" rx="11" fill="#F27C97"/><text x="' + (lx + 31) + '" y="' + (ly + 15) + '" text-anchor="middle" font-size="12" font-weight="700" fill="#fff">' + pts[pts.length - 1].kg.toFixed(1) + "kg</text></svg>";
+  $("chart").innerHTML = s;
 }
 
-function resetDayChecks() {
-  if (!state.today) return;
-  if (!confirm("清空今日所有勾选和重量记录？")) return;
-  state.today.exercises.forEach((ex) => {
-    ex.sets.forEach((s) => {
-      s.done = false;
-      s.weight = "";
-      s.reps = "";
-    });
-  });
-  state.today.note = "";
-  state.today.completedAt = null;
-  $("#sessionNote").value = "";
-  saveState(state);
-  renderExercises();
+/* ---------- history ---------- */
+var WEEK = ["周日", "周一", "周二", "周三", "周四", "周五", "周六"];
+function dObj(k) { var p = k.split("-"); return new Date(+p[0], p[1] - 1, +p[2]); }
+function doneSets(h) { var n = 0; h.exercises.forEach(function (e) { e.sets.forEach(function (s) { if (s.done) n++; }); }); return n; }
+function totalSets(h) { var n = 0; h.exercises.forEach(function (e) { n += e.sets.length; }); return n || 15; }
+function setText(s) { if (s.weight && s.reps) return s.weight + "×" + s.reps; if (s.weight) return s.weight + "kg"; if (s.reps) return s.reps + "次"; return "✓"; }
+function best(h) {
+  var b = null;
+  h.exercises.forEach(function (e) { e.sets.forEach(function (s) { var w = parseFloat(s.weight); if (s.done && w > 0 && (!b || w > b.w)) b = { w: w, r: s.reps, id: e.id }; }); });
+  if (!b) return "完成 " + doneSets(h) + " 组";
+  return "最佳 " + ((EX_BY_ID[b.id] || {}).name || b.id) + " " + b.w + "kg" + (b.r ? " × " + b.r : "");
 }
-
-function formatDate(isoDate) {
-  // isoDate: YYYY-MM-DD
-  const [y, m, d] = isoDate.split("-").map(Number);
-  return `${y}年${m}月${d}日`;
-}
-
 function renderHistory() {
-  const list = $("#historyList");
-  const empty = $("#historyEmpty");
-  list.innerHTML = "";
-  if (!state.history.length) {
-    empty.hidden = false;
-    return;
+  var H = state.history;
+  $("stSess").textContent = H.length;
+  $("stSets").textContent = H.reduce(function (a, h) { return a + doneSets(h); }, 0);
+  var w = loadWeights();
+  if (w.length >= 2) { var d = w[w.length - 1].kg - w[0].kg; $("stW").textContent = (d > 0 ? "+" : d < 0 ? "−" : "±") + Math.abs(d).toFixed(1) + "kg"; } else $("stW").textContent = w.length ? "±0kg" : "—";
+  renderChart();
+  // 训练日 strip: 最近 7 个训练日
+  var days = H.slice(0, 7).reverse();
+  if (!days.length) { $("strip").innerHTML = '<div class="empty" style="width:100%">还没有训练记录，今天就开练吧！</div>'; $("stripRange").textContent = ""; }
+  else {
+    $("strip").innerHTML = days.map(function (h) { return '<div class="d">' + md(h.date) + '<i class="' + h.dayType + '">' + DAY_SHORT[h.dayType] + "</i></div>"; }).join("");
+    $("stripRange").textContent = md(days[0].date) + (days.length > 1 ? " – " + md(days[days.length - 1].date) : "");
   }
-  empty.hidden = true;
-  state.history.forEach((h) => {
-    let done = 0;
-    let total = 0;
-    h.exercises.forEach((ex) =>
-      ex.sets.forEach((s) => {
-        total++;
-        if (s.done) done++;
-      })
-    );
-    const li = document.createElement("li");
-    li.className = "history-item";
-    li.innerHTML = `
-      <div class="hi-top">
-        <span class="hi-day">${DAY_LABELS[h.dayType] || h.dayType}</span>
-        <span class="hi-date">${formatDate(h.date)}</span>
-      </div>
-      <div class="hi-stats">完成 ${done}/${total} 组</div>
-      ${h.note ? `<div class="hi-note">备注：${escapeHtml(h.note)}</div>` : ""}
-    `;
-    list.appendChild(li);
-  });
+  if (!H.length) { $("sessions").innerHTML = '<div class="empty">完成一次训练后，记录会出现在这里 🐻</div>'; return; }
+  $("sessions").innerHTML = H.map(function (h, k) {
+    var det = h.exercises.map(function (e) {
+      var d = EX_BY_ID[e.id], done = e.sets.filter(function (s) { return s.done || s.weight || s.reps; });
+      if (!done.length) return "";
+      return '<div class="e">' + (d ? '<img src="' + A + d.img + '-action.webp" alt="" loading="lazy">' : "") + "<b>" + esc(d ? d.name : e.id) + "</b><div>" + done.map(function (s) { return "<span>" + esc(setText(s)) + "</span>"; }).join("") + "</div></div>";
+    }).join("");
+    return '<div class="s' + (k === 0 ? " exp" : "") + '" data-k="' + k + '"><div class="pill ' + h.dayType + '">' + DAY_SHORT[h.dayType] + '</div><div class="m"><b>' + md(h.date) + " " + WEEK[dObj(h.date).getDay()] + "</b><div>" + esc(best(h)) + '</div></div><div class="cnt">' + doneSets(h) + "<small>/" + totalSets(h) + ' 组</small> <span class="ar">' + (k === 0 ? "▲" : "▼") + '</span></div><div class="det">' + (det || '<div class="note">没有记录具体组数</div>') + (h.note ? '<div class="note">📝 ' + esc(h.note) + "</div>" : "") + '<div class="note" style="text-align:right">单位：kg × 次</div></div></div>';
+  }).join("");
 }
+$("sessions").addEventListener("click", function (ev) { var c = ev.target.closest(".s"); if (!c) return; var on = c.classList.toggle("exp"); c.querySelector(".ar").textContent = on ? "▲" : "▼"; });
+function showHist(on) { document.body.classList.toggle("histmode", on); if (on) renderHistory(); window.scrollTo(0, 0); }
+$("bearBtn").onclick = function () { location.hash = "history"; };
+$("backBtn").onclick = function () { if (location.hash === "#history") history.back(); else showHist(false); };
+window.addEventListener("hashchange", function () { showHist(location.hash === "#history"); });
 
-function escapeHtml(str) {
-  return String(str)
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
-}
-
-/* ========== Init ========== */
-function init() {
-  updateSuggest();
-
-  document.querySelectorAll(".day-btn").forEach((btn) => {
-    btn.addEventListener("click", () => selectDay(btn.dataset.day));
-  });
-
-  $("#sessionNote").addEventListener("input", (e) => {
-    if (!state.today) return;
-    state.today.note = e.target.value;
-    saveState(state);
-  });
-
-  $("#btnComplete").addEventListener("click", completeSession);
-  $("#btnResetDay").addEventListener("click", resetDayChecks);
-
-  $("#btnHistory").addEventListener("click", () => {
-    $("#sessionPanel").hidden = true;
-    $("#historyPanel").hidden = false;
-    renderHistory();
-  });
-  $("#btnBackSession").addEventListener("click", () => {
-    $("#historyPanel").hidden = true;
-    if (currentDay) {
-      $("#sessionPanel").hidden = false;
-    }
-  });
-
-  document.querySelectorAll("[data-close]").forEach((el) => {
-    el.addEventListener("click", closeDetail);
-  });
-
-  // 若今天已有未完成会话，自动打开
-  if (state.today && state.today.date === todayKey()) {
-    selectDay(state.today.dayType);
-  } else {
-    // 高亮建议日，不强制进入
-    setActiveDayBtns(suggestedDay());
-  }
-}
-
-init();
-
-</script>
-
-<div class="pf-mask" id="pfMask" role="dialog" aria-modal="true"><div class="pf-box">
-<h3>编辑身体信息</h3>
-<label>身高 (cm，100–250)</label><input id="pfH" type="number" inputmode="decimal" step="0.1">
-<label>体重 (kg，30–250)</label><input id="pfW" type="number" inputmode="decimal" step="0.1">
-<label>训练水平</label><select id="pfLvSel"><option>新手</option><option>进阶</option><option>熟练</option><option value="__c">自定义…</option></select>
-<input id="pfLvCustom" type="text" maxlength="12" placeholder="输入自定义水平" style="display:none;margin-top:8px">
-<div class="pf-err" id="pfErr"></div>
-<div class="pf-act"><button type="button" id="pfCancel">取消</button><button type="button" id="pfSave">保存</button></div>
-</div></div>
-<script>
-(function(){
-var K='workoutProfile_v1',D={h:187,w:75,lv:'新手'},$=function(i){return document.getElementById(i)};
-function load(){try{var p=JSON.parse(localStorage.getItem(K));if(p&&p.h&&p.w&&p.lv)return p}catch(e){}return D}
-function fmt(n){return String(Math.round(n*10)/10)}
-function render(){var p=load(),b=p.w/Math.pow(p.h/100,2);$('pfText').innerHTML=fmt(p.h)+'cm · '+fmt(p.w)+'kg · '+p.lv.replace(/[<>&]/g,'')+'<span class="pf-bmi">BMI '+b.toFixed(1)+'</span>'}
-function open(){var p=load();$('pfH').value=p.h;$('pfW').value=p.w;var std=['新手','进阶','熟练'].indexOf(p.lv)>=0;$('pfLvSel').value=std?p.lv:'__c';$('pfLvCustom').value=std?'':p.lv;$('pfLvCustom').style.display=std?'none':'block';$('pfErr').textContent='';$('pfMask').classList.add('on')}
-function close(){$('pfMask').classList.remove('on')}
-$('pfChip').onclick=open;$('pfCancel').onclick=close;
-$('pfMask').onclick=function(e){if(e.target===this)close()};
-$('pfLvSel').onchange=function(){$('pfLvCustom').style.display=this.value==='__c'?'block':'none'};
-$('pfSave').onclick=function(){var h=parseFloat($('pfH').value),w=parseFloat($('pfW').value),lv=$('pfLvSel').value==='__c'?$('pfLvCustom').value.trim():$('pfLvSel').value;
-if(!(h>=100&&h<=250))return $('pfErr').textContent='身高请填 100–250 cm';
-if(!(w>=30&&w<=250))return $('pfErr').textContent='体重请填 30–250 kg';
-if(!lv)return $('pfErr').textContent='请填写训练水平';
-localStorage.setItem(K,JSON.stringify({h:h,w:w,lv:lv}));render();close()};
-render();
-})();
+/* ---------- init ---------- */
+renderProfile(); updateSuggest();
+selectDay(state.today && state.today.date === todayKey() ? state.today.dayType : suggestedDay());
+if (location.hash === "#history") showHist(true);
 </script>
 </body>
 </html>
