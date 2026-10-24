@@ -169,7 +169,10 @@ function normSession(h) {
   });
   return h;
 }
-function saveState() { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+var DRAFT_KEY = "workoutDraft_v1";      // 今日各训练日草稿 {date, days:{push,pull,legs}}
+function loadDraft() { var d = null; try { d = JSON.parse(localStorage.getItem(DRAFT_KEY)); } catch (e) {} if (!d || d.date !== todayKey() || typeof d.days !== "object" || !d.days) d = { date: todayKey(), days: {} }; return d; }
+function saveDraft() { if (!state.today || state.today.date !== todayKey()) return; var d = loadDraft(); d.days[state.today.dayType] = state.today; try { localStorage.setItem(DRAFT_KEY, JSON.stringify(d)); } catch (e) {} }
+function saveState() { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {} saveDraft(); }
 function emptySession(day) {
   return { date: todayKey(), dayType: day, note: "", completedAt: null,
     exercises: PLAN[day].map(function (e) { return { id: e.id, sets: Array.from({ length: e.sets }, function () { return { done: false, weight: "", reps: "" }; }) }; }) };
@@ -182,7 +185,9 @@ function ensureToday(day) {
   var t = state.today;
   if (!t || t.date !== todayKey() || t.dayType !== day) {
     // 若今天已完成过这一类型，从历史恢复以便修改
-    var h = state.history.find(function (x) { return x.date === todayKey() && x.dayType === day; });
+    if (t && t.date === todayKey()) saveDraft();  // 先保存当前标签
+    var dr = loadDraft().days[day];
+    var h = dr ? dr : state.history.find(function (x) { return x.date === todayKey() && x.dayType === day; });
     state.today = h ? normSession(JSON.parse(JSON.stringify(h))) : emptySession(day);
   }
   // 与计划对齐（旧 id 保留数据）
@@ -238,12 +243,17 @@ $("cards").addEventListener("click", function (ev) {
   var m = ev.target.closest("[data-mus]");
   if (m) openMuscle(PLAN[curDay][m.dataset.mus]);
 });
+var saveT;
+function flush() { clearTimeout(saveT); saveState(); }
+["change", "focusout"].forEach(function (t) { $("cards").addEventListener(t, flush); });
+document.addEventListener("visibilitychange", function () { if (document.visibilityState === "hidden") flush(); });
+window.addEventListener("pagehide", flush);
 $("cards").addEventListener("input", function (ev) {
   var t = ev.target; if (!t.dataset.ij) return;
   var ij = t.dataset.ij.split(","), s = state.today.exercises[ij[0]].sets[ij[1]];
   s[t.dataset.f] = t.value.trim();
   if (s.weight && s.reps && !s.done) { s.done = true; var ck = t.parentNode.querySelector(".ck"); ck.classList.add("on"); ck.textContent = "✓"; updateProgress(); }
-  saveState();
+  clearTimeout(saveT); saveT = setTimeout(saveState, 150);
 });
 function openMuscle(d) { $("musTitle").textContent = d.name + " · 发力肌群"; $("musImg").src = A + d.mus + "-muscle.webp"; $("musModal").classList.add("on"); }
 [].forEach.call(document.querySelectorAll(".modal"), function (m) {
@@ -259,6 +269,7 @@ $("doneBtn").onclick = function () {
   state.history.unshift(snap);
   state.history.sort(function (a, b) { return a.date < b.date ? 1 : a.date > b.date ? -1 : 0; });
   if (state.history.length > 365) state.history = state.history.slice(0, 365);
+  state.today.done = true;
   saveState(); updateSuggest(); renderTabs();
   toast("已保存！完成 " + p.done + "/" + p.total + " 组，下次建议练「" + DAY_SHORT[suggestedDay()] + "」");
 };
