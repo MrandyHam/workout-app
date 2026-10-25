@@ -75,6 +75,23 @@ h2{font-size:18px;margin:18px 4px 10px}
 .s.exp{border-color:#F5B5C5}.det{width:100%;border-top:2px dashed #F5D3DC;margin-top:4px;padding-top:8px;display:none}.s.exp .det{display:block}
 .e{display:flex;align-items:center;gap:10px;padding:4px 0}.e img{width:48px;height:48px;border-radius:12px;border:2px solid #FFE3EA;flex:none}.e b{font-size:14px;width:76px;flex:none}.e span{display:inline-block;font-size:12px;background:#FFF5F7;border-radius:8px;padding:2px 6px;margin:1px 3px 1px 0}
 .note{font-size:12px;color:#a07070;margin-top:4px}
+.card{position:relative;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;touch-action:manipulation}
+.card .in{-webkit-user-select:text;user-select:text}
+.card.lift{z-index:20;transform:scale(1.04);box-shadow:0 14px 26px rgba(242,124,151,.35),0 3px 0 #F5C9D4;transition:transform .15s,box-shadow .15s}
+.card.drag{transition:none}.card.shift{transition:transform .18s}
+.dots{position:absolute;right:10px;top:8px;width:34px;height:26px;border-radius:13px;border:0;background:rgba(255,255,255,.55);color:rgba(150,110,110,.75);font-size:18px;font-weight:900;line-height:20px;padding:0;letter-spacing:1px}
+.card h3{padding-right:40px}
+.emenu{position:fixed;z-index:55;display:none;background:#fff;border:2.5px solid #F5B5C5;border-radius:18px;box-shadow:0 6px 16px rgba(90,58,58,.18);padding:6px;min-width:120px}
+.emenu.on{display:block}.emenu button{display:block;width:100%;border:0;background:none;padding:10px 12px;border-radius:12px;font-size:16px;font-weight:900;color:#5a3a3a;text-align:left}
+.emenu button:active{background:#FFEFF3}.emenu .del{color:#d4506f}
+.addex{display:block;width:100%;margin:0 0 6px;background:rgba(255,255,255,.6);border:2.5px dashed #F5B5C5;border-radius:22px;padding:12px;font-size:17px;font-weight:900;color:#d4506f}
+.reset{display:block;margin:18px auto 0;background:none;border:0;color:#c9b3b3;font-size:12px;text-decoration:underline}
+.sheetm{align-items:flex-end;padding:0}.sheet{width:100%;max-width:480px;max-height:82vh;background:#FFF8E8;border:3px solid #F5B5C5;border-bottom:0;border-radius:28px 28px 0 0;padding:14px 14px calc(14px + env(safe-area-inset-bottom));display:flex;flex-direction:column;position:relative}
+.sheet h3{margin:2px 40px 10px;text-align:center;font-size:20px}.sheet .tabs{margin:0 0 10px}.sheet .tab{font-size:17px;padding:7px}
+.lib{overflow-y:auto;-webkit-overflow-scrolling:touch;display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:2px 2px 6px}
+.li{background:#fff;border:2.5px solid #F5D3DC;border-radius:20px;padding:8px;text-align:center;color:#5a3a3a}
+.li img{width:100%;aspect-ratio:1;border-radius:14px;display:block}.li b{display:block;font-size:15px;margin-top:6px}.li small{font-size:12px;color:#a07070}
+.li[disabled]{opacity:.4}
 </style>
 </head>
 <body>
@@ -89,6 +106,7 @@ h2{font-size:18px;margin:18px 4px 10px}
   <div class="prog"><i id="progBar"></i><span id="progText">今日进度 0/15 组</span></div>
   <div id="cards"></div>
   <button class="btn" id="doneBtn">完成今天训练！</button>
+  <button class="reset" id="resetBtn">恢复默认动作</button>
 </div>
 
 <div class="wrap" id="hist">
@@ -122,6 +140,11 @@ h2{font-size:18px;margin:18px 4px 10px}
   <div class="err" id="wErr"></div>
   <div class="act"><button type="button" data-close>取消</button><button type="button" class="pri" id="wSave">保存</button></div>
 </div></div>
+<div class="emenu" id="exMenu"><button id="mRep">🔄 替换</button><button class="del" id="mDel">🗑️ 删除</button></div>
+<div class="modal sheetm" id="libModal"><div class="sheet"><button class="x" data-close>×</button><h3 id="libTitle">动作库</h3>
+  <div class="tabs" id="libTabs"><button class="tab" data-g="push">推</button><button class="tab" data-g="pull">拉</button><button class="tab" data-g="legs">腿</button></div>
+  <div class="lib" id="libList"></div></div></div>
+<div class="modal" id="cfModal"><div class="box"><h3 id="cfText"></h3><div class="act"><button type="button" data-close>取消</button><button type="button" class="pri" id="cfOk">确定</button></div></div></div>
 <div class="toast" id="toast"></div>
 
 <script>
@@ -138,7 +161,25 @@ var PLAN = {
   pull: [ex("latpulldown","高位下拉",3,"8–10","pull-01-lat-pulldown"), ex("seatedrow","坐姿划船",3,"8–10","pull-02-seated-row"), ex("tbar","胸托T杠划船",3,"8–10","pull-03-tbar-row","pull-02-seated-row"), ex("facecpull","面拉",3,"12–15","pull-04-face-pull"), ex("curl","哑铃弯举",3,"10–12","pull-05-curl")],
   legs: [ex("squat","深蹲/腿举",3,"8–10","legs-01-squat"), ex("rdl","罗马尼亚硬拉",3,"8–10","legs-02-rdl"), ex("legcurl","腿弯举",3,"10–12","legs-03-leg-curl"), ex("legext","腿伸展",3,"10–12","legs-04-leg-extension"), ex("core","卷腹",3,"15–20","legs-05-crunch")]
 };
-var EX_BY_ID = {}; Object.keys(PLAN).forEach(function (d) { PLAN[d].forEach(function (e) { EX_BY_ID[e.id] = e; }); });
+var EXTRA = {
+  push: [ex("incline","上斜哑铃卧推",3,"10","push-incline-db-press"), ex("pushup","俯卧撑",3,"10–15","push-pushup"), ex("ohtri","哑铃颈后臂屈伸",3,"12","push-overhead-triceps")],
+  pull: [ex("srow","单臂哑铃划船",3,"10/侧","pull-single-arm-row"), ex("hammer","锤式弯举",3,"12","pull-hammer-curl"), ex("reardelt","反向飞鸟",3,"15","pull-rear-delt-fly"), ex("shrug","哑铃耸肩",3,"15","pull-shrug")],
+  legs: [ex("lunge","弓箭步",3,"10/侧","lunge"), ex("goblet","高脚杯深蹲",3,"10","legs-goblet-squat"), ex("hipthrust","臀推",3,"12","legs-hip-thrust"), ex("calf","站姿提踵",3,"15","legs-calf-raise")]
+};
+var EX_BY_ID = {}, LIB = {};
+Object.keys(PLAN).forEach(function (d) { LIB[d] = PLAN[d].concat(EXTRA[d]); LIB[d].forEach(function (e) { e.g = d; EX_BY_ID[e.id] = e; }); });
+/* 每日动作列表（顺序/删除/替换/添加），按动作 id 保存 */
+var PLAN_KEY = "workoutPlan_v1";
+function defaultPlan() { var p = {}; Object.keys(PLAN).forEach(function (d) { p[d] = PLAN[d].map(function (e) { return e.id; }); }); return p; }
+function loadPlan() {
+  var p = null; try { p = JSON.parse(localStorage.getItem(PLAN_KEY)); } catch (e) {}
+  var def = defaultPlan(); if (!p || typeof p !== "object") return def;
+  Object.keys(def).forEach(function (d) { var a = Array.isArray(p[d]) ? p[d].filter(function (id, i, arr) { return EX_BY_ID[id] && arr.indexOf(id) === i; }) : null; p[d] = a || def[d]; });
+  return p;
+}
+var plan = loadPlan();
+function savePlan() { try { localStorage.setItem(PLAN_KEY, JSON.stringify(plan)); } catch (e) {} }
+function curPlan(day) { return plan[day].map(function (id) { return EX_BY_ID[id]; }); }
 
 function $(id) { return document.getElementById(id); }
 function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
@@ -175,7 +216,7 @@ function saveDraft() { if (!state.today || state.today.date !== todayKey()) retu
 function saveState() { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {} saveDraft(); }
 function emptySession(day) {
   return { date: todayKey(), dayType: day, note: "", completedAt: null,
-    exercises: PLAN[day].map(function (e) { return { id: e.id, sets: Array.from({ length: e.sets }, function () { return { done: false, weight: "", reps: "" }; }) }; }) };
+    exercises: curPlan(day).map(function (e) { return { id: e.id, sets: Array.from({ length: e.sets }, function () { return { done: false, weight: "", reps: "" }; }) }; }) };
 }
 var state = loadState();
 var curDay = "push";
@@ -192,7 +233,11 @@ function ensureToday(day) {
   }
   // 与计划对齐（旧 id 保留数据）
   var byId = {}; state.today.exercises.forEach(function (e) { byId[e.id] = e; });
-  state.today.exercises = PLAN[day].map(function (d) {
+  (state.today.stash || []).forEach(function (e) { if (!byId[e.id]) byId[e.id] = e; });
+  var ids = plan[day];
+  state.today.stash = Object.keys(byId).filter(function (id) { return ids.indexOf(id) < 0 && byId[id].sets.some(function (s) { return s.done || s.weight || s.reps; }); }).map(function (id) { return byId[id]; });
+  if (!state.today.stash.length) delete state.today.stash;
+  state.today.exercises = curPlan(day).map(function (d) {
     var e = byId[d.id] || { id: d.id, sets: [] };
     while (e.sets.length < d.sets) e.sets.push({ done: false, weight: "", reps: "" });
     return e;
@@ -217,22 +262,22 @@ function updateSuggest() {
 }
 function renderTabs() {
   var sug = suggestedDay();
-  [].forEach.call(document.querySelectorAll(".tab"), function (b) {
+  [].forEach.call(document.querySelectorAll("#tabs .tab"), function (b) {
     var d = b.dataset.day; b.classList.toggle("on", d === curDay);
     b.textContent = DAY_SHORT[d] + (d === curDay ? " 💪" : "") + (d === sug && d !== curDay ? " ·荐" : "");
   });
 }
 function renderCards() {
-  var html = PLAN[curDay].map(function (d, i) {
+  var html = curPlan(curDay).map(function (d, i) {
     var e = state.today.exercises[i];
     var rows = e.sets.map(function (s, j) {
       return '<div class="set"><button class="ck' + (s.done ? " on" : "") + '" data-ck="' + i + "," + j + '" aria-label="完成第' + (j + 1) + '组">' + (s.done ? "✓" : "") + '</button>组 ' + (j + 1) +
         '<input class="in" inputmode="decimal" placeholder=" " data-f="weight" data-ij="' + i + "," + j + '" value="' + esc(s.weight) + '">kg ×' +
         '<input class="in" inputmode="numeric" placeholder=" " data-f="reps" data-ij="' + i + "," + j + '" value="' + esc(s.reps) + '">次</div>';
     }).join("");
-    return '<div class="card"><h3>' + d.name + "<small>" + d.sets + "×" + d.reps + '</small></h3><div class="row"><button class="img" data-mus="' + i + '" aria-label="查看发力肌群"><img src="' + A + d.img + '-action.webp" alt="' + d.name + '" loading="lazy"></button><div class="sets">' + rows + "</div></div></div>";
+    return '<div class="card" data-i="' + i + '"><button class="dots" data-dots="' + i + '" aria-label="更多">⋯</button><h3>' + d.name + "<small>" + d.sets + "×" + d.reps + '</small></h3><div class="row"><button class="img" data-mus="' + i + '" aria-label="查看发力肌群"><img src="' + A + d.img + '-action.webp" alt="' + d.name + '" loading="lazy"></button><div class="sets">' + rows + "</div></div></div>";
   }).join("");
-  $("cards").innerHTML = html;
+  $("cards").innerHTML = html + '<button class="addex" id="addEx">＋ 添加动作</button>';
 }
 function selectDay(day) { curDay = day; ensureToday(day); renderTabs(); renderCards(); updateProgress(); }
 
@@ -241,7 +286,9 @@ $("cards").addEventListener("click", function (ev) {
   var c = ev.target.closest("[data-ck]");
   if (c) { var ij = c.dataset.ck.split(","), s = state.today.exercises[ij[0]].sets[ij[1]]; s.done = !s.done; c.classList.toggle("on", s.done); c.textContent = s.done ? "✓" : ""; saveState(); updateProgress(); return; }
   var m = ev.target.closest("[data-mus]");
-  if (m) openMuscle(PLAN[curDay][m.dataset.mus]);
+  if (m) { openMuscle(curPlan(curDay)[m.dataset.mus]); return; }
+  var o = ev.target.closest("[data-dots]"); if (o) { openMenu(+o.dataset.dots, o); return; }
+  if (ev.target.closest("#addEx")) openLib(-1);
 });
 var saveT;
 function flush() { clearTimeout(saveT); saveState(); }
@@ -392,6 +439,105 @@ $("backBtn").onclick = function () { if (location.hash === "#history") history.b
 window.addEventListener("hashchange", function () { showHist(location.hash === "#history"); });
 
 /* ---------- init ---------- */
+
+/* ---------- ⋯ 菜单 / 动作库 / 拖动排序 ---------- */
+var menuI = -1, libI = -1, libG = "push", cfFn = null;
+function openMenu(i, btn) {
+  menuI = i; var m = $("exMenu"), r = btn.getBoundingClientRect(); m.classList.add("on");
+  m.style.top = Math.min(r.bottom + 6, innerHeight - m.offsetHeight - 10) + "px"; m.style.left = Math.max(10, r.right - m.offsetWidth) + "px";
+}
+function closeMenu() { $("exMenu").classList.remove("on"); }
+document.addEventListener("click", function (ev) { if (!ev.target.closest("#exMenu") && !ev.target.closest("[data-dots]")) closeMenu(); }, true);
+window.addEventListener("scroll", closeMenu, { passive: true });
+function confirmBox(t, fn) { $("cfText").textContent = t; cfFn = fn; $("cfModal").classList.add("on"); }
+$("cfOk").onclick = function () { $("cfModal").classList.remove("on"); if (cfFn) cfFn(); cfFn = null; };
+function planChanged() { savePlan(); ensureToday(curDay); renderCards(); updateProgress(); }
+$("mDel").onclick = function () {
+  closeMenu(); var i = menuI, d = curPlan(curDay)[i];
+  confirmBox("删除「" + d.name + "」？", function () { plan[curDay].splice(i, 1); planChanged(); toast("已删除「" + d.name + "」"); });
+};
+$("mRep").onclick = function () { closeMenu(); openLib(menuI); };
+function openLib(i) {
+  libI = i; libG = i >= 0 ? curPlan(curDay)[i].g : curDay;
+  $("libTitle").textContent = i >= 0 ? "替换「" + curPlan(curDay)[i].name + "」" : "添加动作";
+  renderLib(); $("libModal").classList.add("on"); $("libList").scrollTop = 0;
+}
+function renderLib() {
+  [].forEach.call($("libTabs").children, function (b) { b.classList.toggle("on", b.dataset.g === libG); });
+  $("libList").innerHTML = LIB[libG].map(function (e) {
+    var has = plan[curDay].indexOf(e.id) >= 0;
+    return '<button class="li" data-id="' + e.id + '"' + (has ? " disabled" : "") + '><img src="' + A + e.img + '-action.webp" alt="" loading="lazy"><b>' + esc(e.name) + "</b><small>" + e.sets + "×" + e.reps + "</small></button>";
+  }).join("");
+}
+$("libTabs").addEventListener("click", function (ev) { var b = ev.target.closest(".tab"); if (b) { libG = b.dataset.g; renderLib(); $("libList").scrollTop = 0; } });
+$("libList").addEventListener("click", function (ev) {
+  var b = ev.target.closest(".li"); if (!b || b.disabled) return; var id = b.dataset.id;
+  if (libI >= 0) plan[curDay][libI] = id; else plan[curDay].push(id);
+  $("libModal").classList.remove("on"); planChanged();
+  toast((libI >= 0 ? "已替换为「" : "已添加「") + EX_BY_ID[id].name + "」");
+  if (libI < 0) setTimeout(function () { var c = $("cards").querySelectorAll(".card"); c[c.length - 1].scrollIntoView({ behavior: "smooth", block: "center" }); }, 50);
+});
+$("resetBtn").onclick = function () { confirmBox("恢复默认动作列表？", function () { plan = defaultPlan(); localStorage.removeItem(PLAN_KEY); planChanged(); toast("已恢复默认"); }); };
+
+var drag = null, press = null, swallow = false;
+function pt(ev) { var t = ev.touches ? (ev.touches[0] || ev.changedTouches[0]) : ev; return { x: t.clientX, y: t.clientY }; }
+function pressStart(ev) {
+  if (drag || ev.button > 0) return;
+  var card = ev.target.closest(".card"); if (!card || ev.target.closest("input")) return;
+  var p = pt(ev); press = { card: card, x: p.x, y: p.y, t: setTimeout(function () { lift(card, p); }, 400) };
+}
+function lift(card, p) {
+  press = null; closeMenu(); if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
+  var cards = [].slice.call($("cards").querySelectorAll(".card"));
+  var sy = scrollY, info = cards.map(function (c) { var r = c.getBoundingClientRect(); return { el: c, top: r.top + sy, h: r.height }; });
+  var from = cards.indexOf(card);
+  drag = { card: card, cards: info, from: from, to: from, startY: p.y + sy, lastY: p.y, step: info[from].h + 14, raf: 0 };
+  card.classList.add("lift");
+  if (navigator.vibrate) navigator.vibrate(12);
+  setTimeout(function () { if (drag) card.classList.add("drag"); }, 150);
+  info.forEach(function (c, k) { if (k !== from) c.el.classList.add("shift"); });
+  drag.raf = requestAnimationFrame(autoScroll);
+}
+function layout() {
+  var d = drag, dy = d.lastY + scrollY - d.startY, me = d.cards[d.from], mid = me.top + me.h / 2 + dy, to = 0;
+  d.cards.forEach(function (c, k) { if (k !== d.from && c.top + c.h / 2 < mid) to++; });
+  d.to = to;
+  d.card.style.transform = "translateY(" + dy + "px) scale(1.04)";
+  d.cards.forEach(function (c, k) {
+    if (k === d.from) return; var s = 0;
+    if (d.from < to && k > d.from && k <= to) s = -d.step; else if (to < d.from && k >= to && k < d.from) s = d.step;
+    c.el.style.transform = s ? "translateY(" + s + "px)" : "";
+  });
+}
+function autoScroll() {
+  if (!drag) return; var y = drag.lastY, e = 80, v = 0;
+  if (y < e) v = -Math.ceil((e - y) / 6); else if (y > innerHeight - e) v = Math.ceil((y - innerHeight + e) / 6);
+  if (v) { scrollBy(0, v); layout(); }
+  drag.raf = requestAnimationFrame(autoScroll);
+}
+function pressMove(ev) {
+  if (drag) { if (ev.cancelable) ev.preventDefault(); drag.lastY = pt(ev).y; layout(); return; }
+  if (press) { var p = pt(ev); if (Math.abs(p.x - press.x) > 8 || Math.abs(p.y - press.y) > 8) { clearTimeout(press.t); press = null; } }
+}
+function pressEnd() {
+  if (press) { clearTimeout(press.t); press = null; }
+  if (!drag) return; var d = drag; drag = null; cancelAnimationFrame(d.raf); swallow = true; setTimeout(function () { swallow = false; }, 350);
+  d.cards.forEach(function (c) { c.el.classList.remove("shift", "drag", "lift"); c.el.style.transform = ""; });
+  if (d.to !== d.from) {
+    var id = plan[curDay].splice(d.from, 1)[0]; plan[curDay].splice(d.to, 0, id);
+    var e = state.today.exercises.splice(d.from, 1)[0]; state.today.exercises.splice(d.to, 0, e);
+    savePlan(); saveState(); renderCards();
+  }
+}
+var C = $("cards");
+C.addEventListener("touchstart", pressStart, { passive: true });
+document.addEventListener("touchmove", pressMove, { passive: false });
+document.addEventListener("touchend", pressEnd); document.addEventListener("touchcancel", pressEnd);
+C.addEventListener("mousedown", function (ev) { if (!ev.sourceCapabilities || !ev.sourceCapabilities.firesTouchEvents) pressStart(ev); });
+document.addEventListener("mousemove", function (ev) { if (drag || press) pressMove(ev); });
+document.addEventListener("mouseup", pressEnd);
+C.addEventListener("contextmenu", function (ev) { if (ev.target.closest(".card")) ev.preventDefault(); });
+C.addEventListener("click", function (ev) { if (swallow) { ev.stopPropagation(); ev.preventDefault(); swallow = false; } }, true);
 renderProfile(); updateSuggest();
 selectDay(state.today && state.today.date === todayKey() ? state.today.dayType : suggestedDay());
 if (location.hash === "#history") showHist(true);
