@@ -75,6 +75,10 @@ h2{font-size:18px;margin:18px 4px 10px}
 .s.exp{border-color:#F5B5C5}.det{width:100%;border-top:2px dashed #F5D3DC;margin-top:4px;padding-top:8px;display:none}.s.exp .det{display:block}
 .e{display:flex;align-items:center;gap:10px;padding:4px 0}.e img{width:48px;height:48px;border-radius:12px;border:2px solid #FFE3EA;flex:none}.e b{font-size:14px;width:76px;flex:none}.e span{display:inline-block;font-size:12px;background:#FFF5F7;border-radius:8px;padding:2px 6px;margin:1px 3px 1px 0}
 .note{font-size:12px;color:#a07070;margin-top:4px}
+.kc{display:flex;align-items:center;justify-content:center;gap:6px;margin:-8px 0 14px;font-size:14px;font-weight:900;color:#e0794f}
+.kc b{font-size:17px}.kci{width:20px;height:20px;border-radius:50%;border:0;background:rgba(255,255,255,.8);color:#c9a0a0;font-size:12px;font-weight:900;padding:0;line-height:20px}
+.ek{font-style:normal;font-size:11px;color:#e0a080;margin-left:6px;font-weight:700}
+.cnt .kk{display:block;font-size:11px;color:#e0794f;text-align:right}
 .card{position:relative;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;touch-action:manipulation}
 .card .in{-webkit-user-select:text;user-select:text}
 .card.lift{z-index:20;transform:scale(1.04);box-shadow:0 14px 26px rgba(242,124,151,.35),0 3px 0 #F5C9D4;transition:transform .15s,box-shadow .15s}
@@ -104,6 +108,7 @@ h2{font-size:18px;margin:18px 4px 10px}
     <button class="tab" data-day="push">推</button><button class="tab" data-day="pull">拉</button><button class="tab" data-day="legs">腿</button>
   </div>
   <div class="prog"><i id="progBar"></i><span id="progText">今日进度 0/15 组</span></div>
+  <div class="kc">🔥 约 <b id="kcal">0</b> kcal <button class="kci" id="kcInfo" aria-label="说明">ⓘ</button></div>
   <div id="cards"></div>
   <button class="btn" id="doneBtn">完成今天训练！</button>
   <button class="reset" id="resetBtn">恢复默认动作</button>
@@ -145,6 +150,8 @@ h2{font-size:18px;margin:18px 4px 10px}
   <div class="tabs" id="libTabs"><button class="tab" data-g="push">推</button><button class="tab" data-g="pull">拉</button><button class="tab" data-g="legs">腿</button></div>
   <div class="lib" id="libList"></div></div></div>
 <div class="modal" id="cfModal"><div class="box"><h3 id="cfText"></h3><div class="act"><button type="button" data-close>取消</button><button type="button" class="pri" id="cfOk">确定</button></div></div></div>
+<div class="modal" id="kcModal"><div class="box"><button class="x" data-close>×</button><h3>🔥 卡路里是估算的</h3>
+  <div style="text-align:left;font-size:14px;line-height:1.7">根据你的体重、勾选完成的组、重量和次数估算：<br>· 举起重量做的功 ÷ 肌肉效率 (约22%)<br>· 加上每组训练和组间休息的代谢消耗 (MET)<br>实际消耗因人而异，仅供参考，误差可能有 ±30% 哦～</div></div></div>
 <div class="toast" id="toast"></div>
 
 <script>
@@ -301,6 +308,49 @@ function ensureToday(day) {
   saveState();
 }
 
+
+/* ---------- 卡路里估算 (近似) ----------
+ * 混合模型 = 机械功部分 + 时间(MET)部分，均为“净”消耗（已扣除静息）。
+ * 1) 机械功: W = (外部负重kg × 哑铃个数 + 体重 × 体重占比) × 9.81 × 动作行程ROM(m) × 次数
+ *    代谢消耗 kcal = W / 效率0.22 / 4184   （人体肌肉总效率约 20–25%）
+ * 2) 时间部分: (MET 5.0 − 1) × 体重kg × 每组时长(约40秒发力 + 80秒组间 = 2分钟)/60
+ *    MET 5.0 取自 2024 Adult Compendium of Physical Activities 抗阻训练
+ *    (02054 = 3.5 一般多动作 8–15 次; 02050 = 6.0 健美/大强度; 取中间值)，减 1 MET 避免与静息重复计算。
+ * 来源 / 参考:
+ *  - Herrmann SD et al. 2024 Adult Compendium of Physical Activities, J Sport Health Sci 2024 — https://pacompendium.com/conditioning-exercise/
+ *  - 机械功÷效率法 (同思路，20% 效率): https://sport-calculator.com/calculators/gym/squat-calorie-calculator
+ *  - MET 公式参考 finegym-io/fitness-calc (MIT) 的 calculateCaloriesBurned；此处为自写实现，未复制代码。
+ * ROM / 体重占比为经验估计；器械/绳索只算外部负重。 */
+var KC = { eff: 0.22, met: 5.0, setMin: 2 };
+// id: [ROM米, 体重占比, 哑铃个数(kg按单只填写时×2)]
+var KX = {
+  bench: [0.40, 0, 1], ohp: [0.50, 0, 2], fly: [0.30, 0, 1], lateral: [0.45, 0, 2], pushdown: [0.30, 0, 1],
+  latpulldown: [0.50, 0, 1], seatedrow: [0.40, 0, 1], tbar: [0.35, 0, 1], facecpull: [0.30, 0, 1], curl: [0.40, 0, 2],
+  squat: [0.50, 0.8, 1], rdl: [0.45, 0.5, 1], legcurl: [0.35, 0, 1], legext: [0.35, 0, 1], core: [0.25, 0.3, 1],
+  incline: [0.40, 0, 2], pushup: [0.30, 0.65, 1], ohtri: [0.40, 0, 1],
+  srow: [0.35, 0, 1], hammer: [0.40, 0, 2], reardelt: [0.45, 0, 2], shrug: [0.08, 0, 2],
+  lunge: [0.45, 0.8, 2], goblet: [0.50, 0.8, 1], hipthrust: [0.20, 0.6, 1], calf: [0.08, 1.0, 2]
+};
+function bodyKg() {
+  var w = loadWeights(); if (w.length) return w[w.length - 1].kg;
+  return +loadProfile().w || 75;
+}
+function setKcal(id, s, bw) {
+  if (!s || !s.done) return 0;
+  var x = KX[id] || [0.35, 0, 1], d = EX_BY_ID[id];
+  var reps = parseFloat(s.reps); if (!(reps > 0)) reps = d ? parseFloat(String(d.reps)) || 10 : 10;
+  var kg = parseFloat(s.weight); if (!(kg > 0)) kg = 0;
+  var work = (kg * x[2] + bw * x[1]) * 9.81 * x[0] * reps;
+  return work / KC.eff / 4184 + (KC.met - 1) * bw * KC.setMin / 60;
+}
+function exKcal(e, bw) { var t = 0; (e.sets || []).forEach(function (s) { t += setKcal(e.id, s, bw); }); return t; }
+function sessKcal(h, bw) { bw = bw || bodyKg(); var t = 0; (h.exercises || []).forEach(function (e) { t += exKcal(e, bw); }); return t; }
+function updateKcal() {
+  if (!state.today) return; var bw = bodyKg();
+  $("kcal").textContent = Math.round(sessKcal(state.today, bw));
+  state.today.exercises.forEach(function (e, i) { var el = document.querySelector('[data-ek="' + i + '"]'); if (el) { var k = Math.round(exKcal(e, bw)); el.textContent = k ? "🔥" + k : ""; } });
+}
+$("kcInfo").onclick = function () { $("kcModal").classList.add("on"); };
 /* ---------- main UI ---------- */
 function progress() {
   var done = 0, total = 0;
@@ -308,6 +358,7 @@ function progress() {
   return { done: done, total: total };
 }
 function updateProgress() {
+  updateKcal();
   var p = progress();
   $("progText").textContent = "今日进度 " + p.done + "/" + p.total + " 组";
   $("progBar").style.width = (p.total ? p.done / p.total * 100 : 0) + "%";
@@ -331,7 +382,7 @@ function renderCards() {
         '<input class="in" inputmode="decimal" placeholder=" " data-f="weight" data-ij="' + i + "," + j + '" value="' + esc(s.weight) + '">kg ×' +
         '<input class="in" inputmode="numeric" placeholder=" " data-f="reps" data-ij="' + i + "," + j + '" value="' + esc(s.reps) + '">次</div>';
     }).join("");
-    return '<div class="card" data-i="' + i + '"><button class="dots" data-dots="' + i + '" aria-label="更多">⋯</button><h3>' + d.name + "<small>" + d.sets + "×" + d.reps + '</small></h3><div class="row"><button class="img" data-mus="' + i + '" aria-label="查看发力肌群"><img src="' + A + d.img + '-action.webp" alt="' + d.name + '" loading="lazy"></button><div class="sets">' + rows + "</div></div></div>";
+    return '<div class="card" data-i="' + i + '"><button class="dots" data-dots="' + i + '" aria-label="更多">⋯</button><h3>' + d.name + "<small>" + d.sets + "×" + d.reps + '</small><em class="ek" data-ek="' + i + '"></em></h3><div class="row"><button class="img" data-mus="' + i + '" aria-label="查看发力肌群"><img src="' + A + d.img + '-action.webp" alt="' + d.name + '" loading="lazy"></button><div class="sets">' + rows + "</div></div></div>";
   }).join("");
   $("cards").innerHTML = html + '<button class="addex" id="addEx">＋ 添加动作</button>';
 }
@@ -355,7 +406,7 @@ $("cards").addEventListener("input", function (ev) {
   var t = ev.target; if (!t.dataset.ij) return;
   var ij = t.dataset.ij.split(","), s = state.today.exercises[ij[0]].sets[ij[1]];
   s[t.dataset.f] = t.value.trim();
-  if (s.weight && s.reps && !s.done) { s.done = true; var ck = t.parentNode.querySelector(".ck"); ck.classList.add("on"); ck.textContent = "✓"; updateProgress(); }
+  if (s.weight && s.reps && !s.done) { s.done = true; var ck = t.parentNode.querySelector(".ck"); ck.classList.add("on"); ck.textContent = "✓"; updateProgress(); } else if (s.done) updateKcal();
   clearTimeout(saveT); saveT = setTimeout(saveState, 150);
 });
 function openMuscle(d) { $("musTitle").textContent = d.name + " · 发力肌群"; $("musImg").src = A + d.mus + "-muscle.webp"; $("musModal").classList.add("on"); }
@@ -368,6 +419,7 @@ $("doneBtn").onclick = function () {
   state.today.completedAt = new Date().toISOString();
   state.lastCompletedDay = state.today.dayType;
   var snap = JSON.parse(JSON.stringify(state.today));
+  snap.kcal = Math.round(sessKcal(snap)); snap.bodyKg = bodyKg();
   state.history = state.history.filter(function (h) { return !(h.date === snap.date && h.dayType === snap.dayType); });
   state.history.unshift(snap);
   state.history.sort(function (a, b) { return a.date < b.date ? 1 : a.date > b.date ? -1 : 0; });
@@ -485,7 +537,7 @@ function renderHistory() {
       if (!done.length) return "";
       return '<div class="e">' + (d ? '<img src="' + A + d.img + '-action.webp" alt="" loading="lazy">' : "") + "<b>" + esc(d ? d.name : e.id) + "</b><div>" + done.map(function (s) { return "<span>" + esc(setText(s)) + "</span>"; }).join("") + "</div></div>";
     }).join("");
-    return '<div class="s' + (k === 0 ? " exp" : "") + '" data-k="' + k + '"><div class="pill ' + h.dayType + '">' + DAY_SHORT[h.dayType] + '</div><div class="m"><b>' + md(h.date) + " " + WEEK[dObj(h.date).getDay()] + "</b><div>" + esc(best(h)) + '</div></div><div class="cnt">' + doneSets(h) + "<small>/" + totalSets(h) + ' 组</small> <span class="ar">' + (k === 0 ? "▲" : "▼") + '</span></div><div class="det">' + (det || '<div class="note">没有记录具体组数</div>') + (h.note ? '<div class="note">📝 ' + esc(h.note) + "</div>" : "") + '<div class="note" style="text-align:right">单位：kg × 次</div></div></div>';
+    return '<div class="s' + (k === 0 ? " exp" : "") + '" data-k="' + k + '"><div class="pill ' + h.dayType + '">' + DAY_SHORT[h.dayType] + '</div><div class="m"><b>' + md(h.date) + " " + WEEK[dObj(h.date).getDay()] + "</b><div>" + esc(best(h)) + '</div></div><div class="cnt">' + doneSets(h) + "<small>/" + totalSets(h) + ' 组</small> <span class="ar">' + (k === 0 ? "▲" : "▼") + '</span><span class="kk">🔥 ' + (h.kcal != null ? h.kcal : Math.round(sessKcal(h))) + ' kcal</span><span style="display:none">' + (k === 0 ? "▲" : "▼") + '</span></div><div class="det">' + (det || '<div class="note">没有记录具体组数</div>') + (h.note ? '<div class="note">📝 ' + esc(h.note) + "</div>" : "") + '<div class="note" style="text-align:right">单位：kg × 次</div></div></div>';
   }).join("");
 }
 $("sessions").addEventListener("click", function (ev) { var c = ev.target.closest(".s"); if (!c) return; var on = c.classList.toggle("exp"); c.querySelector(".ar").textContent = on ? "▲" : "▼"; });
