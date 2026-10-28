@@ -76,6 +76,7 @@ h2{font-size:18px;margin:18px 4px 10px}
 .e{display:flex;align-items:center;gap:10px;padding:4px 0}.e img{width:48px;height:48px;border-radius:12px;border:2px solid #FFE3EA;flex:none}.e b{font-size:14px;width:76px;flex:none}.e span{display:inline-block;font-size:12px;background:#FFF5F7;border-radius:8px;padding:2px 6px;margin:1px 3px 1px 0}
 .note{font-size:12px;color:#a07070;margin-top:4px}
 .kc{display:flex;align-items:center;justify-content:center;gap:6px;margin:-8px 0 14px;font-size:14px;font-weight:900;color:#e0794f}
+.cf{height:1.2em;width:1.2em;vertical-align:-0.25em;object-fit:contain}
 .kc b{font-size:17px}.kci{width:20px;height:20px;border-radius:50%;border:0;background:rgba(255,255,255,.8);color:#c9a0a0;font-size:12px;font-weight:900;padding:0;line-height:20px}
 .ek{font-style:normal;font-size:11px;color:#e0a080;margin-left:6px;font-weight:700}
 .cnt .kk{display:block;font-size:11px;color:#e0794f;text-align:right}
@@ -108,7 +109,7 @@ h2{font-size:18px;margin:18px 4px 10px}
     <button class="tab" data-day="push">推</button><button class="tab" data-day="pull">拉</button><button class="tab" data-day="legs">腿</button>
   </div>
   <div class="prog"><i id="progBar"></i><span id="progText">今日进度 0/15 组</span></div>
-  <div class="kc">🔥 约 <b id="kcal">0</b> kcal <button class="kci" id="kcInfo" aria-label="说明">ⓘ</button></div>
+  <div class="kc"><img class="cf" src="assets/campfire.webp" alt=""> 约 <b id="kcal">0</b> kcal <button class="kci" id="kcInfo" aria-label="说明">ⓘ</button></div>
   <div id="cards"></div>
   <button class="btn" id="doneBtn">完成今天训练！</button>
   <button class="reset" id="resetBtn">恢复默认动作</button>
@@ -150,7 +151,7 @@ h2{font-size:18px;margin:18px 4px 10px}
   <div class="tabs" id="libTabs"><button class="tab" data-g="push">推</button><button class="tab" data-g="pull">拉</button><button class="tab" data-g="legs">腿</button></div>
   <div class="lib" id="libList"></div></div></div>
 <div class="modal" id="cfModal"><div class="box"><h3 id="cfText"></h3><div class="act"><button type="button" data-close>取消</button><button type="button" class="pri" id="cfOk">确定</button></div></div></div>
-<div class="modal" id="kcModal"><div class="box"><button class="x" data-close>×</button><h3>🔥 卡路里是估算的</h3>
+<div class="modal" id="kcModal"><div class="box"><button class="x" data-close>×</button><h3><img class="cf" src="assets/campfire.webp" alt=""> 卡路里是估算的</h3>
   <div style="text-align:left;font-size:14px;line-height:1.7">根据你的体重、勾选完成的组、重量和次数估算：<br>· 举起重量做的功 ÷ 肌肉效率 (约22%)<br>· 加上每组训练和组间休息的代谢消耗 (MET)<br>实际消耗因人而异，仅供参考，误差可能有 ±30% 哦～</div></div></div>
 <div class="toast" id="toast"></div>
 
@@ -321,6 +322,7 @@ function ensureToday(day) {
  *  - 机械功÷效率法 (同思路，20% 效率): https://sport-calculator.com/calculators/gym/squat-calorie-calculator
  *  - MET 公式参考 finegym-io/fitness-calc (MIT) 的 calculateCaloriesBurned；此处为自写实现，未复制代码。
  * ROM / 体重占比为经验估计；器械/绳索只算外部负重。 */
+var CF = '<img class="cf" src="assets/campfire.webp" alt="">';
 var KC = { eff: 0.22, met: 5.0, setMin: 2 };
 // id: [ROM米, 体重占比, 哑铃个数(kg按单只填写时×2)]
 var KX = {
@@ -348,7 +350,7 @@ function sessKcal(h, bw) { bw = bw || bodyKg(); var t = 0; (h.exercises || []).f
 function updateKcal() {
   if (!state.today) return; var bw = bodyKg();
   $("kcal").textContent = Math.round(sessKcal(state.today, bw));
-  state.today.exercises.forEach(function (e, i) { var el = document.querySelector('[data-ek="' + i + '"]'); if (el) { var k = Math.round(exKcal(e, bw)); el.textContent = k ? "🔥" + k : ""; } });
+  state.today.exercises.forEach(function (e, i) { var el = document.querySelector('[data-ek="' + i + '"]'); if (el) { var k = Math.round(exKcal(e, bw)); el.innerHTML = k ? CF + k : ""; } });
 }
 $("kcInfo").onclick = function () { $("kcModal").classList.add("on"); };
 /* ---------- main UI ---------- */
@@ -537,7 +539,7 @@ function renderHistory() {
       if (!done.length) return "";
       return '<div class="e">' + (d ? '<img src="' + A + d.img + '-action.webp" alt="" loading="lazy">' : "") + "<b>" + esc(d ? d.name : e.id) + "</b><div>" + done.map(function (s) { return "<span>" + esc(setText(s)) + "</span>"; }).join("") + "</div></div>";
     }).join("");
-    return '<div class="s' + (k === 0 ? " exp" : "") + '" data-k="' + k + '"><div class="pill ' + h.dayType + '">' + DAY_SHORT[h.dayType] + '</div><div class="m"><b>' + md(h.date) + " " + WEEK[dObj(h.date).getDay()] + "</b><div>" + esc(best(h)) + '</div></div><div class="cnt">' + doneSets(h) + "<small>/" + totalSets(h) + ' 组</small> <span class="ar">' + (k === 0 ? "▲" : "▼") + '</span><span class="kk">🔥 ' + (h.kcal != null ? h.kcal : Math.round(sessKcal(h))) + ' kcal</span><span style="display:none">' + (k === 0 ? "▲" : "▼") + '</span></div><div class="det">' + (det || '<div class="note">没有记录具体组数</div>') + (h.note ? '<div class="note">📝 ' + esc(h.note) + "</div>" : "") + '<div class="note" style="text-align:right">单位：kg × 次</div></div></div>';
+    return '<div class="s' + (k === 0 ? " exp" : "") + '" data-k="' + k + '"><div class="pill ' + h.dayType + '">' + DAY_SHORT[h.dayType] + '</div><div class="m"><b>' + md(h.date) + " " + WEEK[dObj(h.date).getDay()] + "</b><div>" + esc(best(h)) + '</div></div><div class="cnt">' + doneSets(h) + "<small>/" + totalSets(h) + ' 组</small> <span class="ar">' + (k === 0 ? "▲" : "▼") + '</span><span class="kk">' + CF + ' ' + (h.kcal != null ? h.kcal : Math.round(sessKcal(h))) + ' kcal</span><span style="display:none">' + (k === 0 ? "▲" : "▼") + '</span></div><div class="det">' + (det || '<div class="note">没有记录具体组数</div>') + (h.note ? '<div class="note">📝 ' + esc(h.note) + "</div>" : "") + '<div class="note" style="text-align:right">单位：kg × 次</div></div></div>';
   }).join("");
 }
 $("sessions").addEventListener("click", function (ev) { var c = ev.target.closest(".s"); if (!c) return; var on = c.classList.toggle("exp"); c.querySelector(".ar").textContent = on ? "▲" : "▼"; });
