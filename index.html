@@ -36,7 +36,7 @@ h1{font-size:40px;margin:14px 0 8px;color:#F27C97;letter-spacing:2px;text-shadow
 .set{display:flex;align-items:center;gap:4px;white-space:nowrap;font-size:13px;font-weight:700}
 .ck{width:24px;height:24px;border-radius:50%;border:2px solid #F27C97;flex:none;display:flex;align-items:center;justify-content:center;font-size:13px;background:#fff;color:#fff;padding:0}
 .ck.on{background:#F27C97}
-.in{width:40px;height:26px;border:1.5px dashed #C9B3B3;border-radius:8px;text-align:center;font-size:13px;color:#5a3a3a;background:#fff;padding:0;font-family:inherit;font-weight:700}
+.in{width:48px;height:30px;border:1.5px dashed #C9B3B3;border-radius:8px;text-align:center;font-size:16px;color:#5a3a3a;background:#fff;padding:0;font-family:inherit;font-weight:700}
 .in:not(:placeholder-shown){border:1.5px solid #F27C97;background:#FFF5F7}
 .in:focus{outline:none;border-color:#F27C97}
 .btn{display:block;width:100%;margin-top:8px;background:#7FD3B0;border:3px solid #fff;box-shadow:0 0 0 2.5px #5DBB95;border-radius:30px;text-align:center;color:#fff;font-size:24px;font-weight:900;padding:14px}
@@ -211,14 +211,63 @@ function normSession(h) {
   return h;
 }
 var DRAFT_KEY = "workoutDraft_v1";      // 今日各训练日草稿 {date, days:{push,pull,legs}}
+var LAST_SETS_KEY = "lastSets_v1";      // 各动作最近一次 kg×reps（按组，不含勾选）{id:[{weight,reps},...]}
 function loadDraft() { var d = null; try { d = JSON.parse(localStorage.getItem(DRAFT_KEY)); } catch (e) {} if (!d || d.date !== todayKey() || typeof d.days !== "object" || !d.days) d = { date: todayKey(), days: {} }; return d; }
 function saveDraft() { if (!state.today || state.today.date !== todayKey()) return; var d = loadDraft(); d.days[state.today.dayType] = state.today; try { localStorage.setItem(DRAFT_KEY, JSON.stringify(d)); } catch (e) {} }
-function saveState() { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {} saveDraft(); }
+function loadLastSets() { var o = null; try { o = JSON.parse(localStorage.getItem(LAST_SETS_KEY)); } catch (e) {} return o && typeof o === "object" ? o : {}; }
+function saveLastSets(o) { try { localStorage.setItem(LAST_SETS_KEY, JSON.stringify(o || lastSets)); } catch (e) {} }
+function rememberInto(store, exercises) {
+  (exercises || []).forEach(function (e) {
+    if (!e || !e.id || !Array.isArray(e.sets)) return;
+    var rows = e.sets.map(function (s) { return { weight: s && s.weight != null ? String(s.weight) : "", reps: s && s.reps != null ? String(s.reps) : "" }; });
+    if (!rows.some(function (r) { return r.weight || r.reps; })) return;
+    var prev = store[e.id] || [];
+    var merged = rows.map(function (r, i) {
+      return { weight: r.weight || (prev[i] && prev[i].weight) || "", reps: r.reps || (prev[i] && prev[i].reps) || "" };
+    });
+    if (prev.length > merged.length) merged = merged.concat(prev.slice(merged.length));
+    store[e.id] = merged;
+  });
+}
+function rememberSetsFrom(exercises) {
+  (exercises || []).forEach(function (e) {
+    if (!e || !e.id || !Array.isArray(e.sets)) return;
+    var rows = e.sets.map(function (s) {
+      return { weight: s && s.weight != null ? String(s.weight) : "", reps: s && s.reps != null ? String(s.reps) : "" };
+    });
+    var has = rows.some(function (r) { return r.weight || r.reps; });
+    if (!has) { if (lastSets[e.id]) delete lastSets[e.id]; return; }
+    lastSets[e.id] = rows;
+  });
+  saveLastSets();
+}
+function lastSetsFor(id, n) {
+  var prev = lastSets[id] || [], out = [], i;
+  for (i = 0; i < n; i++) out.push({ weight: (prev[i] && prev[i].weight) || "", reps: (prev[i] && prev[i].reps) || "" });
+  return out;
+}
+function seedLastSets() {
+  var o = loadLastSets();
+  // 从历史（旧→新）和任意草稿（含隔日）灌入，已有 lastSets 的条目保留并被更新覆盖
+  var hist = (state.history || []).slice().reverse();
+  hist.forEach(function (h) { rememberInto(o, h.exercises); });
+  try {
+    var raw = JSON.parse(localStorage.getItem(DRAFT_KEY));
+    if (raw && raw.days) Object.keys(raw.days).forEach(function (k) { if (raw.days[k]) rememberInto(o, raw.days[k].exercises); });
+  } catch (e) {}
+  if (state.today) rememberInto(o, state.today.exercises);
+  lastSets = o; saveLastSets();
+}
+function saveState() { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {} saveDraft(); if (state.today) rememberSetsFrom(state.today.exercises); }
 function emptySession(day) {
   return { date: todayKey(), dayType: day, note: "", completedAt: null,
-    exercises: curPlan(day).map(function (e) { return { id: e.id, sets: Array.from({ length: e.sets }, function () { return { done: false, weight: "", reps: "" }; }) }; }) };
+    exercises: curPlan(day).map(function (e) {
+      return { id: e.id, sets: lastSetsFor(e.id, e.sets).map(function (r) { return { done: false, weight: r.weight, reps: r.reps }; }) };
+    }) };
 }
 var state = loadState();
+var lastSets = {};
+seedLastSets();
 var curDay = "push";
 
 function suggestedDay() { return NEXT_DAY[state.lastCompletedDay] || "push"; }
@@ -238,8 +287,15 @@ function ensureToday(day) {
   state.today.stash = Object.keys(byId).filter(function (id) { return ids.indexOf(id) < 0 && byId[id].sets.some(function (s) { return s.done || s.weight || s.reps; }); }).map(function (id) { return byId[id]; });
   if (!state.today.stash.length) delete state.today.stash;
   state.today.exercises = curPlan(day).map(function (d) {
-    var e = byId[d.id] || { id: d.id, sets: [] };
-    while (e.sets.length < d.sets) e.sets.push({ done: false, weight: "", reps: "" });
+    var e = byId[d.id];
+    if (!e) {
+      e = { id: d.id, sets: lastSetsFor(d.id, d.sets).map(function (r) { return { done: false, weight: r.weight, reps: r.reps }; }) };
+    } else {
+      while (e.sets.length < d.sets) {
+        var r = lastSetsFor(d.id, d.sets)[e.sets.length] || { weight: "", reps: "" };
+        e.sets.push({ done: false, weight: r.weight || "", reps: r.reps || "" });
+      }
+    }
     return e;
   });
   saveState();
